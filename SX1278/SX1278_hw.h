@@ -3,12 +3,14 @@
 
 #include <stdint.h>
 
-typedef struct {
+typedef struct
+{
 	int pin;
 	void *port;
 } SX1278_hw_dio_t;
 
-typedef struct {
+typedef struct
+{
 	SX1278_hw_dio_t reset;
 	SX1278_hw_dio_t dio0;
 	SX1278_hw_dio_t nss;
