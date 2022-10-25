@@ -324,3 +324,143 @@ uint8_t SX1278_RSSI(SX1278_t *module)
     temp = 127 - (temp >> 1); // 127:Max RSSI
     return temp;
 }
+
+/*Added in 2022-10-25*/
+
+/* 只接收一次 */
+uint8_t SX1278_RX_Once(SX1278_t *module, uint8_t length, uint32_t timeout){
+    uint8_t addr;
+
+    module->packetLength = length;
+
+    SX1278_SPIWrite(module, REG_LR_PADAC, 0x84);       // Normal and RX
+    SX1278_SPIWrite(module, LR_RegHopPeriod, 0xFF);    // No FHSS
+    SX1278_SPIWrite(module, REG_LR_DIOMAPPING1, 0x01); // DIO=00,DIO1=00,DIO2=00, DIO3=01
+    SX1278_SPIWrite(module, LR_RegIrqFlagsMask, 0x3F); // Open RxDone interrupt & Timeout
+    SX1278_clearLoRaIrq(module);
+    SX1278_SPIWrite(module, LR_RegPayloadLength, length); // Payload Length 21byte(this register must difine when the data long of one byte in SF is 6)
+    addr = SX1278_SPIRead(module, LR_RegFifoRxBaseAddr);  // Read RxBaseAddr
+    SX1278_SPIWrite(module, LR_RegFifoAddrPtr, addr);     // RxBaseAddr->FiFoAddrPtr
+    SX1278_SPIWrite(module, LR_RegOpMode, 0x8d);          // Mode//Low Frequency Mode
+    // SX1278_SPIWrite(module, LR_RegOpMode,0x05);	//Continuous Rx Mode //High Frequency Mode
+    module->readBytes = 0;
+
+    while (1)
+    {
+        if ((SX1278_SPIRead(module, LR_RegModemStat) & 0x04) == 0x04)
+        { // Rx-on going RegModemStat
+            module->status = RX;
+            // return 1;
+            break;
+        }
+        if (--timeout == 0)
+        {
+            SX1278_hw_Reset(module->hw);
+            SX1278_config(module);
+            return 0;
+        }
+        //		SX1278_hw_DelayMs(1);
+    }
+    
+
+    /* 处理接收 */
+    unsigned char addr;
+    unsigned char packet_size;
+
+    if (SX1278_hw_GetDIO0(module->hw))
+    {
+        memset(module->rxBuffer, 0x00, SX1278_MAX_PACKET);
+
+        addr = SX1278_SPIRead(module, LR_RegFifoRxCurrentaddr); // last packet addr
+        SX1278_SPIWrite(module, LR_RegFifoAddrPtr, addr);       // RxBaseAddr -> FiFoAddrPtr
+
+        if (module->LoRa_SF == SX1278_LORA_SF_6)
+        { // When SpreadFactor is six,will used Implicit Header mode(Excluding internal packet length)
+            packet_size = module->packetLength;
+        }
+        else
+        {
+            packet_size = SX1278_SPIRead(module, LR_RegRxNbBytes); // Number for received bytes
+        }
+
+        SX1278_SPIBurstRead(module, 0x00, module->rxBuffer, packet_size);
+        module->readBytes = packet_size;
+        SX1278_clearLoRaIrq(module);
+    }
+
+    // SX1278_standby(module); // Entry standby mode
+    SX1278_sleep();//进入睡眠模式
+
+    return module->readBytes;
+}
+
+/* 只发送一次 */
+uint8_t SX1278_TX_Once(SX1278_t *module, uint8_t *txBuffer, uint8_t length, uint32_t timeout){
+    uint8_t addr;
+    uint8_t temp;
+
+    module->packetLength = length;
+
+    // SX1278_config(module);                             // setting base parameter
+    SX1278_SPIWrite(module, REG_LR_PADAC, 0x87);       // Tx for 20dBm
+    SX1278_SPIWrite(module, LR_RegHopPeriod, 0x00);    // RegHopPeriod NO FHSS
+    SX1278_SPIWrite(module, REG_LR_DIOMAPPING1, 0x41); // DIO0=01, DIO1=00,DIO2=00, DIO3=01
+    SX1278_clearLoRaIrq(module);
+    SX1278_SPIWrite(module, LR_RegIrqFlagsMask, 0xF7);    // Open TxDone interrupt
+    SX1278_SPIWrite(module, LR_RegPayloadLength, length); // RegPayloadLength 21byte
+    addr = SX1278_SPIRead(module, LR_RegFifoTxBaseAddr);  // RegFiFoTxBaseAddr
+    SX1278_SPIWrite(module, LR_RegFifoAddrPtr, addr);     // RegFifoAddrPtr
+
+    while (1)
+    {
+        temp = SX1278_SPIRead(module, LR_RegPayloadLength);
+        if (temp == length)
+        {
+            module->status = TX;
+            // return 1;
+            break;
+        }
+
+        if (--timeout == 0)
+        {
+            SX1278_hw_Reset(module->hw);
+            SX1278_config(module);
+            return 0;
+        }
+    }
+
+    SX1278_SPIBurstWrite(module, 0x00, txBuffer, length);//将数据写入FIFO
+    SX1278_SPIWrite(module, LR_RegOpMode, 0x8b); //设置 Tx Mode
+
+    while (1)
+    {
+        if (SX1278_hw_GetDIO0(module->hw))
+        { // if(Get_NIRQ()) //Packet send over
+            SX1278_SPIRead(module, LR_RegIrqFlags);
+            SX1278_clearLoRaIrq(module); // Clear irq
+            // SX1278_standby(module);      // Entry Standby mode
+            // return 1;
+            break;
+        }
+
+        if (--timeout == 0)
+        {
+            SX1278_hw_Reset(module->hw);
+            SX1278_config(module);
+            return 0;
+        }
+        SX1278_hw_DelayMs(1);
+    }
+
+    SX1278_sleep();//进入睡眠模式
+}
+
+void SX1278_CAD_Mode(){
+    SX1278_SPIWrite(module, LR_RegOpMode, 0x0F);
+    module->status = CAD; 
+}
+
+/* CAD检测 */
+void SX1278_CAD_Detect(SX1278_t *module){
+    SX1278_CAD_Mode();//进入CAD模式
+}

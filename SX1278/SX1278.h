@@ -721,7 +721,7 @@ static const uint8_t SX1278_CodingRate[4] = { 0x01, 0x02, 0x03, 0x04 };
 static const uint8_t SX1278_CRC_Sum[2] = { 0x01, 0x00 };
 
 typedef enum _SX1278_STATUS {
-	SLEEP, STANDBY, TX, RX
+	SLEEP, STANDBY, TX, RX, CAD
 } SX1278_Status_t;
 
 typedef struct {
