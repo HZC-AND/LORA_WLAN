@@ -11,3 +11,69 @@
 
 
 #include "data_link_layer.h"
+#include "../SX1278/SX1278.h"
+#include "device_cfg.h"
+
+// uint8_t MAC_Address = 0;
+uint8_t channel_selection_table[] = {413,424,434,445,454,463,474,484,495,503.514,523};
+
+// extern SX1278_t SX1278_Module;
+SX1278_t SX1278_Module;
+
+data_link_layer_frame_t data_link_layer_frame;
+
+void data_link_layer_init(){
+    data_link_layer_frame.function.conmunication_mode = 0b00;//点播
+    data_link_layer_frame.function.channel_selection = 0b0000;//413mhz
+    data_link_layer_frame.function.multicast_grouping = 0b00;//组播分组1
+    data_link_layer_frame.MAC_Address = Current_MAC_Address;
+
+    data_link_layer_frame.network_layer_data = NULL_PTR;
+    
+}
+
+uint8_t data_link_layer_send(data_link_layer_frame_t* data){
+    uint8_t conmunication_mode = data->function.conmunication_mode;
+    SX1278_Module.frequency = channel_selection_table[data->function.channel_selection];
+    switch (conmunication_mode){
+        case 0b00: //点播;
+            //SX1278_TX_Once(&SX1278_Module...);
+            break;
+        case 0b01: //组播；
+            // SX1278_TX_Once(&SX1278_Module...);
+            break;
+        case 0b11: //广播
+            // SX1278_TX_Once(&SX1278_Module...);
+            break;
+
+        default:
+            break;
+    }
+
+    return 1;
+}
+
+uint8_t data_link_layer_receive_callback(data_link_layer_frame_t* data){
+    uint8_t conmunication_mode = data->function.conmunication_mode;
+    // SX1278_Module.frequency = channel_selection_table[data->function.channel_selection];
+    switch (conmunication_mode){
+        case 0b00: //点播;
+            //SX1278_TX_Once(&SX1278_Module...);
+            break;
+        case 0b01: //组播；
+            // SX1278_TX_Once(&SX1278_Module...);
+            break;
+        case 0b11: //广播
+            // SX1278_TX_Once(&SX1278_Module...);
+            break;
+
+        default:
+            break;
+    }
+
+    return 1;
+}
+
+void crc_8(uint8_t* data){
+
+}

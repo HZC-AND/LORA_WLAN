@@ -524,6 +524,8 @@
 #ifndef __SX1278_H__
 #define __SX1278_H__
 
+#include "../fake/platform.h" //HZC Added in 2022-11-16
+
 #include <stdint.h>
 #include <stdbool.h>
 
