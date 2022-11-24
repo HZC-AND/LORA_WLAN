@@ -16,6 +16,7 @@ typedef struct
     /* data */
     data_link_layer_function_t function;
     uint8_t MAC_Address;
+    uint8_t data_length;
     uint8_t* network_layer_data;
     uint8_t CRC_8;
 }data_link_layer_frame_t;
@@ -23,9 +24,9 @@ typedef struct
 
 void data_link_layer_init();
 
-uint8_t data_link_layer_send(data_link_layer_frame_t* data);
-uint8_t data_link_layer_receive_callback(data_link_layer_frame_t* data)
-void crc_8(uint8_t* data);
+uint8_t data_link_layer_send(uint8_t* data);
+uint8_t data_link_layer_receive_callback(data_link_layer_frame_t* data);
+uint8_t crc_8(uint8_t* data);
 
 
 

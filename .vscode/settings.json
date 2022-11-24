@@ -2,6 +2,8 @@
     "files.associations": {
         "data_link_layer.h": "c",
         "sx1278.h": "c",
-        "platform.h": "c"
+        "platform.h": "c",
+        "device_info.h": "c",
+        "network_layer.h": "c"
     }
 }

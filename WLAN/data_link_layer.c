@@ -12,19 +12,20 @@
 
 #include "data_link_layer.h"
 #include "../SX1278/SX1278.h"
-#include "device_cfg.h"
+#include "device_info.h"
 
-// uint8_t MAC_Address = 0;
-uint8_t channel_selection_table[] = {413,424,434,445,454,463,474,484,495,503.514,523};
+#include "network_layer.h"
 
 // extern SX1278_t SX1278_Module;
 SX1278_t SX1278_Module;
 
 data_link_layer_frame_t data_link_layer_frame;
 
+uint8_t data_buffer_for_sx1278[255];
+
 void data_link_layer_init(){
-    data_link_layer_frame.function.conmunication_mode = 0b00;//点播
-    data_link_layer_frame.function.channel_selection = 0b0000;//413mhz
+    data_link_layer_frame.function.conmunication_mode = Communication_Mode_Init;//点播
+    data_link_layer_frame.function.channel_selection = Channel_Selection_Init;//413mhz
     data_link_layer_frame.function.multicast_grouping = 0b00;//组播分组1
     data_link_layer_frame.MAC_Address = Current_MAC_Address;
 
@@ -32,23 +33,51 @@ void data_link_layer_init(){
     
 }
 
-uint8_t data_link_layer_send(data_link_layer_frame_t* data){
-    uint8_t conmunication_mode = data->function.conmunication_mode;
-    SX1278_Module.frequency = channel_selection_table[data->function.channel_selection];
-    switch (conmunication_mode){
-        case 0b00: //点播;
-            //SX1278_TX_Once(&SX1278_Module...);
-            break;
-        case 0b01: //组播；
-            // SX1278_TX_Once(&SX1278_Module...);
-            break;
-        case 0b11: //广播
-            // SX1278_TX_Once(&SX1278_Module...);
-            break;
+uint8_t data_link_layer_send(uint8_t* data){
+    uint8_t data_length = 0;
 
+    data_link_layer_frame.network_layer_data = data;
+    uint8_t conmunication_mode = data_link_layer_frame.function.conmunication_mode;
+
+    switch (data_link_layer_frame.network_layer_data[0]){
+        case data_frame:
+            data_link_layer_frame.data_length = data_link_layer_frame.network_layer_data[5] + 6;
+            break;
+        case data_ack_frame:
+            data_link_layer_frame.data_length = 3;
+            break;
+        case retransmission_frame:
+            data_link_layer_frame.data_length = 3;
+            break;
+        case location_frame:
+            data_link_layer_frame.data_length = 2;
+            break;
+        case location_ack_frame:
+            data_link_layer_frame.data_length = 4;
+            break;
         default:
             break;
     }
+
+    data_length = data_link_layer_frame.data_length + 4;
+
+    /* Copy数据到buffer */
+    data_buffer_for_sx1278[0] = (uint8_t)(data_link_layer_frame.function);
+    data_buffer_for_sx1278[1] = (uint8_t)(data_link_layer_frame.data_length);
+    for (uint8_t i = 0; i < data_link_layer_frame.data_length; i++)
+    {
+        data_buffer_for_sx1278[i + 2] = data_link_layer_frame.network_layer_data[i];
+    }
+    /* 计算CRC */
+    data_link_layer_frame.CRC_8 = crc_8(&data_buffer_for_sx1278[0], data_length - 1);
+    /**********/
+    data_buffer_for_sx1278[data_length - 1] = (uint8_t)(data_link_layer_frame.CRC_8);
+    /********************/
+    
+
+    SX1278_Module.frequency = channel_selection_table[data_link_layer_frame.function.channel_selection];
+
+    SX1278_TX_Once(&SX1278_Module,&data_buffer_for_sx1278[0],data_length,200);
 
     return 1;
 }
@@ -58,15 +87,14 @@ uint8_t data_link_layer_receive_callback(data_link_layer_frame_t* data){
     // SX1278_Module.frequency = channel_selection_table[data->function.channel_selection];
     switch (conmunication_mode){
         case 0b00: //点播;
-            //SX1278_TX_Once(&SX1278_Module...);
+            global_communication_mode = point_to_point;
             break;
         case 0b01: //组播；
-            // SX1278_TX_Once(&SX1278_Module...);
+            global_communication_mode = multicast;
             break;
         case 0b11: //广播
-            // SX1278_TX_Once(&SX1278_Module...);
+            global_communication_mode = broadcast;
             break;
-
         default:
             break;
     }
@@ -74,6 +102,27 @@ uint8_t data_link_layer_receive_callback(data_link_layer_frame_t* data){
     return 1;
 }
 
-void crc_8(uint8_t* data){
+// #define FACTOR (0x107 & 0xFF) //多项式因子(取低8bit)
 
+uint8_t crc_8(uint8_t* data, uint8_t length){
+    //G(X) = X8+X2+X+1
+    uint8_t crc = 0x00;
+    uint8_t FACTOR = (0x107 & 0xFF);//多项式因子(取低8bit)
+    while(length--)
+	{
+        crc ^= (*data++);//前一字节计算CRC后的结果异或上后一字节，再次计算CRC
+        for (uint8_t i=8; i>0; i--)
+        {
+            if (crc & 0x80)//高位为1，需要异或；否则，不需要
+            {
+                crc = (crc << 1) ^ FACTOR;
+            }
+            else
+            {
+            	crc = (crc << 1);
+			}
+        }
+    }
+
+    return crc;
 }

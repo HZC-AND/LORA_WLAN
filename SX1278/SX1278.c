@@ -1,5 +1,4 @@
 #include "SX1278.h"
-#include "SX"
 #include <string.h>
 
 uint8_t SX1278_SPIRead(SX1278_t *module, uint8_t addr)
