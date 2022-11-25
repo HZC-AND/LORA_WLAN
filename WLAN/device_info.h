@@ -1,6 +1,6 @@
 #include "fake/platform.h"
 
-#define Current_MAC_Address 0
+#define Current_MAC_Address 1   //1-255
 #define Communication_Mode_Init point_to_point
 #define Channel_Selection_Init _413MHZ
 

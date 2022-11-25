@@ -25,7 +25,7 @@ typedef struct
 void data_link_layer_init();
 
 uint8_t data_link_layer_send(uint8_t* data);
-uint8_t data_link_layer_receive_callback(data_link_layer_frame_t* data);
+uint8_t data_link_layer_receive_callback(uint8_t* data, uint8_t length);
 uint8_t crc_8(uint8_t* data);
 
 

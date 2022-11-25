@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="yLtbUKuZxLzs7Zki0nff" name="通信协议架构">
-        <mxGraphModel dx="331" dy="1870" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="237" dy="1802" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="iFZXWEeWM3QpYLgtQmsO-0"/>
                 <mxCell id="iFZXWEeWM3QpYLgtQmsO-1" parent="iFZXWEeWM3QpYLgtQmsO-0"/>
@@ -186,7 +186,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="x9rLJt6SAvgbj97QaBmh" name="数据链路层数据格式">
-        <mxGraphModel dx="362" dy="706" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="399" dy="633" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -249,7 +249,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="6gUuc052qOnKWtWP-L-i" name="网络层数据格式">
-        <mxGraphModel dx="1275" dy="1402" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="1397" dy="904" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="aevX1FBp8jtBNWZgY23v-0"/>
                 <mxCell id="aevX1FBp8jtBNWZgY23v-1" parent="aevX1FBp8jtBNWZgY23v-0"/>
@@ -494,7 +494,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="PTBDlZ7V7GHp3nTzSQtw" name="函数服务架构/时序图">
-        <mxGraphModel dx="389" dy="825" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="none" math="0" shadow="0">
+        <mxGraphModel dx="484" dy="791" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="none" math="0" shadow="0">
             <root>
                 <mxCell id="whv28e2US_J9vZ-6Ezxt-0"/>
                 <mxCell id="whv28e2US_J9vZ-6Ezxt-1" parent="whv28e2US_J9vZ-6Ezxt-0"/>
@@ -804,10 +804,24 @@
         </mxGraphModel>
     </diagram>
     <diagram id="rIVUMVF1LpTE2DLozC6C" name="状态机">
-        <mxGraphModel dx="883" dy="615" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="624" dy="633" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="h61SFYtFUylOMZnylOSw-0"/>
                 <mxCell id="h61SFYtFUylOMZnylOSw-1" parent="h61SFYtFUylOMZnylOSw-0"/>
+                <mxCell id="tUfjZO8siuH5mCmJeKu3-7" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="h61SFYtFUylOMZnylOSw-1" source="tUfjZO8siuH5mCmJeKu3-0" target="tUfjZO8siuH5mCmJeKu3-17">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="345" y="290" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="tUfjZO8siuH5mCmJeKu3-0" value="" style="ellipse;fillColor=#000000;strokeColor=none;" vertex="1" parent="h61SFYtFUylOMZnylOSw-1">
+                    <mxGeometry x="330" y="190" width="30" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="tUfjZO8siuH5mCmJeKu3-1" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="h61SFYtFUylOMZnylOSw-1">
+                    <mxGeometry x="330" y="450" width="30" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="tUfjZO8siuH5mCmJeKu3-17" value="idle" style="html=1;align=center;verticalAlign=top;rounded=1;absoluteArcSize=1;arcSize=10;dashed=0;" vertex="1" parent="h61SFYtFUylOMZnylOSw-1">
+                    <mxGeometry x="275" y="280" width="140" height="40" as="geometry"/>
+                </mxCell>
             </root>
         </mxGraphModel>
     </diagram>
