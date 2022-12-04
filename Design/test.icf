@@ -1,0 +1,28 @@
+//ICF
+
+define memory mem with size = 4G;
+
+define vector_start = 0x80;
+define vector_size = 0x400;
+
+
+define region my_region = mem:[from 0x10000 to 0x20000 ];//size 10k //Flash //Ram
+
+define region vector_region = mem:[from vector_start size vector_size];
+
+// define a = size(my_region);
+
+
+define start_address = "0x20000000";
+
+// place at address mem:start_address { my_section};  === place at start of my_region {my_section};
+// place in my_region {my_section,my_section1,my_section2};
+
+// place at address mem:vector_start { .isr_vector }; 
+place at start of vector_region { .isr_vector };
+
+
+
+// place in mem:
+
+// keep { my_section };
