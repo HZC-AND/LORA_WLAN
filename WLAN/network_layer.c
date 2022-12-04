@@ -61,14 +61,14 @@ uint8_t network_layer_data_frame_send(uint8_t* data, uint8_t length, uint8_t to_
     if(network_layer_send_state == idle){
         if(length <= MAX_DATA_LENGTH){
             /* TODO: 需要添加临界区 */
-            network_layer_send_state = sending_single_frame;
+            network_layer_send_state = sending_single_data_frame;
             network_layer_send_data.data = data;
             network_layer_send_data.length = length;
             network_layer_send_data.to_mac_address = to_mac_address;
             /***********************/
         }else{
             /* 分帧 */
-            network_layer_send_state = sending_multiple_frame;
+            network_layer_send_state = sending_single_data_frame;
             split_frame_to_sub_frame_data_table(data, length, to_mac_address);
         }
     }else{
@@ -121,7 +121,7 @@ void copy_data_to_send_buffer(uint8_t* buffer, network_layer_data_frame_t* netwo
 }
 
 /* copy数据至receive frame,从局部变量到全局变量 */
-void copy_data_to_receive_frame(uint8_t* data){
+uint8_t copy_data_to_receive_frame(uint8_t* data){
 
     switch (data[0])
     {

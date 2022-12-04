@@ -186,7 +186,7 @@ void network_layer_data_ack_frame_send(void);
 
 void copy_data_to_send_buffer(uint8_t* buffer, network_layer_data_frame_t* network_layer_data_frame);
 // void copy_data_to_receive_buffer(network_layer_data_frame_t* network_layer_data_frame);
-copy_data_to_receive_frame(uint8_t* data)
+uint8_t copy_data_to_receive_frame(uint8_t* data);
 
 uint8_t network_layer_receive_callback(uint8_t* data, uint8_t length);
 
