@@ -165,8 +165,8 @@ typedef struct
     /* 每个元素的大小, 即sizeof(forwarding_table_t) */
     uint8_t element_length;
     uint8_t (*push)(stack_t*, uint8_t*);
-    uint8_t (*pop)(stack_t*);
-    uint8_t (*delete)(stack_t*);
+    uint8_t (*pop)(stack_t*, uint8_t*);
+    uint8_t (*delete)(stack_t*, uint8_t*);
     uint8_t (*clear)(stack_t*);
     uint8_t (*serach)(stack_t*, uint8_t*);
     uint8_t* data[];
@@ -200,4 +200,9 @@ network_layer_send_state_enum get_network_layer_send_state(void);
 void network_layer_main_function(void);
 
 /* 栈函数 */
+uint8_t stack_push(stack_t* this, uint8_t* data); 
+uint8_t stack_pop(stack_t* this, uint8_t* data);
+uint8_t stack_delete(stack_t* this, uint8_t* data);
+uint8_t stack_clear(stack_t* this);
+uint8_t stack_serach(stack_t* this, uint8_t* data);
 /* ***** */
