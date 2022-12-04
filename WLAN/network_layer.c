@@ -50,7 +50,7 @@ void network_layer_init(void){
     /* network_layer_sub_frame_send_data 初始化 */
     network_layer_sub_frame_send_data.current_frame_number = 1;
 
-    /* 报文转发表，数据报文转发表栈栈初始化 */
+    /* 报文转发表，数据报文转发表栈初始化 */
     stack_create(&data_frame_forwarding_table_stack, 
                   network_layer_data_frame_forwarding_table, 
                   Network_Layer_Data_Frame_Forwarding_Table_Max_Length, 
@@ -306,6 +306,7 @@ uint8_t stack_pop(stack_t* this, uint8_t* data){
 uint8_t stack_delete(stack_t* this, uint8_t* data){
     uint8_t find_index = this->stack_length;//初始为超出范围值
     uint8_t delete_state = 0;
+    /* 遍历搜索，后续可尝试使用更高效的查找法，比如二分法 */
     for(uint8_t i = 0;i <= this->stack_top_index;i++){
         for(uint8_t j = 0;j < this->element_length;j++){
             if(data[j] == this->data[i][j]){
