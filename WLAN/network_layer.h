@@ -169,7 +169,7 @@ typedef struct
     uint8_t (*delete)(stack_t*, uint8_t*);
     uint8_t (*clear)(stack_t*);
     uint8_t (*serach)(stack_t*, uint8_t*);
-    uint8_t* data[];
+    uint8_t** data;
 }stack_t;
 
 /* ******************* */
@@ -205,4 +205,5 @@ uint8_t stack_pop(stack_t* this, uint8_t* data);
 uint8_t stack_delete(stack_t* this, uint8_t* data);
 uint8_t stack_clear(stack_t* this);
 uint8_t stack_serach(stack_t* this, uint8_t* data);
+uint8_t stack_create(stack_t* new_stack, uint8_t** data, uint8_t stack_length, uint8_t element_length);
 /* ***** */

@@ -32,6 +32,9 @@ network_layer_data_ack_frame_t network_layer_receive_data_ack_frame;
 /* **************** */
 
 /* 报文转发表 */
+#define Network_Layer_Data_Frame_Forwarding_Table_Max_Length 10
+forwarding_table_t network_layer_data_frame_forwarding_table[Network_Layer_Data_Frame_Forwarding_Table_Max_Length];/* 数据报文转发表 */
+stack_t data_frame_forwarding_table_stack;/* 数据报文转发表栈 */
 /* ********* */
 
 network_layer_from_up_layer_send_data_t network_layer_send_data;
@@ -46,6 +49,12 @@ void network_layer_init(void){
 
     /* network_layer_sub_frame_send_data 初始化 */
     network_layer_sub_frame_send_data.current_frame_number = 1;
+
+    /* 报文转发表，数据报文转发表栈栈初始化 */
+    stack_create(&data_frame_forwarding_table_stack, 
+                  network_layer_data_frame_forwarding_table, 
+                  Network_Layer_Data_Frame_Forwarding_Table_Max_Length, 
+                  sizeof(forwarding_table_t));
 }
 
 uint8_t network_layer_data_frame_send(uint8_t* data, uint8_t length, uint8_t to_mac_address){
@@ -336,6 +345,21 @@ uint8_t stack_clear(stack_t* this){
 }
 
 uint8_t stack_serach(stack_t* this, uint8_t* data){
+    return 1;
+}
+
+uint8_t stack_create(stack_t* new_stack, uint8_t** data, uint8_t stack_length, uint8_t element_length){
+    new_stack->stack_top_index = 0;
+    new_stack->is_full = 0;
+    new_stack->stack_length = stack_length;
+    new_stack->element_length = element_length;
+    new_stack->push = stack_push;
+    new_stack->pop = stack_pop;
+    new_stack->delete = stack_delete;
+    new_stack->clear = stack_clear;
+    new_stack->serach = stack_serach;
+    new_stack->data = data;
+
     return 1;
 }
 /* ************* */
