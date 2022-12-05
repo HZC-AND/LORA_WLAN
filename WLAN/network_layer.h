@@ -1,6 +1,4 @@
 
-
-
 #include "../fake/platform.h"
 
 
