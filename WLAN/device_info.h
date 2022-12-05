@@ -25,5 +25,5 @@ typedef enum{
     _523MHZ,
 }channel_selection_enum;
 
-extern communication_mode_enum global_communication_mode;
+extern communication_mode_enum receive_data_communication_mode;
 extern uint8_t channel_selection_table[];
