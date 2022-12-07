@@ -5,6 +5,8 @@
 
 #include "network_layer.h"
 
+#include "algorithm_lib.h"
+
 // extern SX1278_t SX1278_Module;
 SX1278_t SX1278_Module;
 
@@ -112,29 +114,4 @@ uint8_t data_link_layer_receive_callback(uint8_t* data, uint8_t length){
     (void)network_layer_receive_callback(data_link_layer_frame_receive.network_layer_data, data_link_layer_frame_receive.data_length);
 
     return 1;
-}
-
-// #define FACTOR (0x107 & 0xFF) //多项式因子(取低8bit)
-
-uint8_t crc_8(uint8_t* data, uint8_t length){
-    //G(X) = X8+X2+X+1
-    uint8_t crc = 0x00;
-    uint8_t FACTOR = (0x107 & 0xFF);//多项式因子(取低8bit)
-    while(length--)
-	{
-        crc ^= (*data++);//前一字节计算CRC后的结果异或上后一字节，再次计算CRC
-        for (uint8_t i=8; i>0; i--)
-        {
-            if (crc & 0x80)//高位为1，需要异或；否则，不需要
-            {
-                crc = (crc << 1) ^ FACTOR;
-            }
-            else
-            {
-            	crc = (crc << 1);
-			}
-        }
-    }
-
-    return crc;
 }

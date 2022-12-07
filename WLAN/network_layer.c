@@ -3,6 +3,8 @@
 #include "data_link_layer.h"
 #include "device_info.h"
 
+#include "algorithm_lib.h"
+
 /* 路由表 */
 
 /* 定位表 */
@@ -29,8 +31,10 @@ forwarding_table_t network_layer_data_frame_forwarding_table[Network_Layer_Data_
 stack_t data_frame_forwarding_table_stack;/* 数据报文转发表栈 */
 /* ********* */
 
+/* 上层数据的全局变量 */
 network_layer_from_up_layer_send_data_t network_layer_send_data;
 network_layer_to_up_layer_receive_data_t network_layer_receive_data;//接收到的网络层帧，全局变量
+/* **************** */
 uint8_t receive_data_buffer[255];//用于保存收到的数据内容，全局变量
 
 void network_layer_init(void){
@@ -226,6 +230,18 @@ static uint8_t network_layer_data_frame_send_single_frame(void){
     return result;
 }
 
+static uint8_t network_layer_data_frame_send_single_frame_forwarding(network_layer_data_frame_t* network_layer_data_frame){
+    uint8_t result = 0;
+
+    /*copy数据至buffer*/
+    uint8_t network_layer_data_buffer[MAX_DATA_LENGTH + 6];
+    copy_data_to_send_buffer(&network_layer_data_buffer[0],network_layer_data_frame);
+    /*****************/
+    result = data_link_layer_send(&network_layer_data_buffer[0]);
+
+    return result;
+}
+
 static uint8_t network_layer_data_frame_send_multiple_frame(void){
     uint8_t result = 0;
     uint8_t current_frame_data_length = MAX_DATA_LENGTH;
@@ -259,114 +275,39 @@ static uint8_t network_layer_data_frame_send_multiple_frame(void){
     return result;
 }
 
-/* 栈处理逻辑代码,测试完成后提出去成为一个单独的模块 */
-uint8_t stack_push(stack_t* this, uint8_t* data){
-    if(this->is_full == 1){
-        /* 栈满 */
-        return 0;
-    }
-    this->stack_top_index++;
-    if(this->stack_top_index == (this->stack_length - 1)){
-        this->is_full = 1;
-    }
-    // this->data[this->i]->from_mac_address = data->from_mac_address;
-    // this->data[this->i]->to_mac_address = data->to_mac_address;
-    // this->data[this->i]->crc_8 = data->crc_8;
-    for(uint8_t i = 0;i < this->element_length;i++){
-        this->data[this->stack_top_index][i] = data[i];
-    }
-    
-    return 1;
-} 
-
-uint8_t stack_pop(stack_t* this, uint8_t* data){
-    if(this->stack_top_index == 0){
-        /* 栈空 */
-        return 0;
-    }
-    for(uint8_t i = 0;i < this->element_length;i++){
-        data[i] = this->data[this->stack_top_index][i];
-    }
-    this->stack_top_index--;
-    if(this->stack_top_index == 0){
-        this->is_full = 0;
-    }
-
-    return 1;
-}
-
-uint8_t stack_delete(stack_t* this, uint8_t* data){
-    uint8_t find_index = this->stack_length;//初始为超出范围值
-    uint8_t delete_state = 0;
-    /* 遍历搜索，后续可尝试使用更高效的查找法，比如二分法 */
-    for(uint8_t i = 0;i <= this->stack_top_index;i++){
-        for(uint8_t j = 0;j < this->element_length;j++){
-            if(data[j] == this->data[i][j]){
-                find_index = i;
-            }else{
-                find_index = this->stack_length;
-                break;
-            }
-        }
-
-        if(find_index <= this->stack_top_index){
-            for(uint8_t j = 0;j <= (this->stack_top_index - 1);j++){
-                for(uint8_t k = 0;k < this->element_length;k++){
-                    /* 后面元素覆盖前面元素 */
-                    this->data[j][k] = this->data[j+1][k];
-                }
-            }
-            delete_state = 1;
-            /* 删除操作后，重置find_index */
-            find_index = this->stack_length;
-            /* 栈数据减去1 */
-            this->stack_top_index--;
-        }
-    }
-    
-    if(delete_state == 0){
-        /* 删除错误，栈中未找到指定数据 */
-        return 0;
-    }
-    return 1;
-}
-
-uint8_t stack_clear(stack_t* this){
-    this->stack_top_index = 0;
-    this->is_full = 0;
-    return 1;
-}
-
-uint8_t stack_serach(stack_t* this, uint8_t* data){
-    return 1;
-}
-
-uint8_t stack_create(stack_t* new_stack, uint8_t** data, uint8_t stack_length, uint8_t element_length){
-    new_stack->stack_top_index = 0;
-    new_stack->is_full = 0;
-    new_stack->stack_length = stack_length;
-    new_stack->element_length = element_length;
-    new_stack->push = stack_push;
-    new_stack->pop = stack_pop;
-    new_stack->delete = stack_delete;
-    new_stack->clear = stack_clear;
-    new_stack->serach = stack_serach;
-    new_stack->data = data;
-
-    return 1;
-}
-/* ************* */
-
 void network_layer_main_function(void){
     if(network_layer_receive_state != idle){
         /* 处理接收 */
         switch(network_layer_receive_state){
             case received_single_data_frame:
-                /* 处理转发逻辑 */
-                /* *********** */
-
-                /* 确认为本机接收报文 */
-                /* **************** */
+                if(network_layer_receive_data_frame.to_mac_address != Current_MAC_Address){
+                    /* 处理转发逻辑 */
+                    uint8_t stack_serach_result;
+                    forwarding_table_t* forwarding_table_data = (forwarding_table_t*)malloc(sizeof(forwarding_table_t));
+                    forwarding_table_data->from_mac_address = network_layer_receive_data_frame.from_mac_address;
+                    forwarding_table_data->to_mac_address = network_layer_receive_data_frame.to_mac_address;
+                    forwarding_table_data->time_counter = 0;//不参与搜索比较
+                    forwarding_table_data->crc_8 = crc_8((uint8_t*)network_layer_receive_data_frame.data, 
+                                                         network_layer_receive_data_frame.data_length);
+                    stack_serach_result = data_frame_forwarding_table_stack.serach(&data_frame_forwarding_table_stack,
+                                                                                    (uint8_t*)forwarding_table_data);
+                    if(stack_serach_result == data_frame_forwarding_table_stack.stack_top_index){
+                        /* 没有搜索到，push进表，并转发 */
+                        data_frame_forwarding_table_stack.push(&data_frame_forwarding_table_stack,
+                                                                (uint8_t*)forwarding_table_data);//push进表
+                        network_layer_data_frame_send_single_frame_forwarding(&network_layer_receive_data_frame);//转发报文
+                    }else{
+                        /* 不做处理，丢弃该报文 */
+                    }
+                    /* *********** */
+                }else{
+                    /* 确认为本机接收报文 */
+                    network_layer_receive_data.from_mac_address = network_layer_receive_data_frame.from_mac_address;
+                    network_layer_receive_data.data = network_layer_receive_data_frame.data;
+                    network_layer_receive_data.length = network_layer_receive_data_frame.data_length;
+                    //调用上层CallBack
+                    /* **************** */
+                }
 
                 network_layer_receive_state = idle;
                 break;

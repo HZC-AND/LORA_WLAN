@@ -4,6 +4,7 @@
         "sx1278.h": "c",
         "platform.h": "c",
         "device_info.h": "c",
-        "network_layer.h": "c"
+        "network_layer.h": "c",
+        "algorithm_lib.h": "c"
     }
 }
