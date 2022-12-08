@@ -16,10 +16,10 @@ data_link_layer_frame_t data_link_layer_frame_receive;//接收的数据
 uint8_t data_send_buffer_for_sx1278[255];
 
 void data_link_layer_init(){
-    data_link_layer_frame.function.conmunication_mode = Communication_Mode_Init;//点播
-    data_link_layer_frame.function.channel_selection = Channel_Selection_Init;//413mhz
-    data_link_layer_frame.function.multicast_grouping = 0b00;//组播分组1
-    data_link_layer_frame.MAC_Address = Current_MAC_Address;
+    // data_link_layer_frame.function.conmunication_mode = Communication_Mode;//点播
+    // data_link_layer_frame.function.channel_selection = Channel_Selection_Init;//413mhz
+    // data_link_layer_frame.function.multicast_grouping = 0b00;//组播分组1
+    // data_link_layer_frame.MAC_Address = Current_MAC_Address;
 
     data_link_layer_frame.network_layer_data = NULL_PTR;
     
@@ -27,6 +27,11 @@ void data_link_layer_init(){
 
 uint8_t data_link_layer_send(uint8_t* data){
     uint8_t data_length = 0;
+
+    data_link_layer_frame.function.conmunication_mode = Communication_Mode;
+    data_link_layer_frame.function.channel_selection = Channel_Selection_Init;//413mhz
+    data_link_layer_frame.function.multicast_grouping = 0b00;//组播分组1
+    data_link_layer_frame.MAC_Address = Current_MAC_Address;
 
     data_link_layer_frame.network_layer_data = data;
     uint8_t conmunication_mode = data_link_layer_frame.function.conmunication_mode;

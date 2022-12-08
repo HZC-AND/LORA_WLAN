@@ -1,7 +1,7 @@
 #include "fake/platform.h"
 
 #define Current_MAC_Address 1   //1-255
-#define Communication_Mode_Init point_to_point
+// #define Communication_Mode point_to_point
 #define Channel_Selection_Init _413MHZ
 
 typedef enum{
@@ -25,5 +25,6 @@ typedef enum{
     _523MHZ,
 }channel_selection_enum;
 
+extern communication_mode_enum Communication_Mode;
 extern communication_mode_enum receive_data_communication_mode;
 extern uint8_t channel_selection_table[];

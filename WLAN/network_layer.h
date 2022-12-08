@@ -23,7 +23,8 @@ typedef enum{
     sending_location_frame,
     sending_location_ack_frame,
     forwarding_frame,            //正在转发报文
-    waiting_ack_frame,      //正在等待ACK
+    waiting_single_data_ack_frame,      //正在等待单帧ACK
+    waiting_multiple_data_ack_frame,      //正在等待多帧ACK
 }network_layer_send_state_enum;
 
 /* 网络层数据接收状态 */
@@ -171,11 +172,14 @@ uint8_t copy_data_to_receive_frame(uint8_t* data);
 uint8_t network_layer_receive_callback(uint8_t* data, uint8_t length);
 
 static uint8_t network_layer_data_frame_send_single_frame(void);
-static uint8_t network_layer_data_frame_send_single_frame_forwarding(network_layer_data_frame_t* network_layer_data_frame)
+static uint8_t network_layer_data_frame_send_single_frame_forwarding(network_layer_data_frame_t* network_layer_data_frame);
 static uint8_t network_layer_data_frame_send_multiple_frame(void);
 
 uint8_t split_frame_to_sub_frame_data_table(uint8_t* data, uint8_t length, uint8_t to_mac_address);
 uint8_t combine_sub_frame_data(uint8_t* data, uint8_t length);
 network_layer_send_state_enum get_network_layer_send_state(void);
 
+
+void network_layer_forwarding_table_timer_management(void);
+void network_layer_ack_timer_management(void);
 void network_layer_main_function(void);
