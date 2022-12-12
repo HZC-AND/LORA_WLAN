@@ -1,7 +1,12 @@
 /* 数据分帧，流控，地址寻址，重发*/
 
+#include "mainConfig.h"
 
-#include "../fake/platform.h"
+#ifndef NJFUWORK_FINAL_MAINCONFIG_H
+#include "fake/platform.h"
+#else
+#include <stdint.h>
+#endif
 typedef struct
 {
     /* data */

@@ -1,5 +1,11 @@
 
-#include "../fake/platform.h"
+#include "mainConfig.h"
+
+#ifndef NJFUWORK_FINAL_MAINCONFIG_H
+#include "fake/platform.h"
+#else
+#include <stdint.h>
+#endif
 
 
 #define MAX_DATA_LENGTH 10 //这里定义网路层一帧数据携带的上层数据最大长度

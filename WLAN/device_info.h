@@ -1,4 +1,10 @@
+#include "mainConfig.h"
+
+#ifndef NJFUWORK_FINAL_MAINCONFIG_H
 #include "fake/platform.h"
+#else
+#include <stdint.h>
+#endif
 
 #define Current_MAC_Address 1   //1-255
 // #define Communication_Mode point_to_point

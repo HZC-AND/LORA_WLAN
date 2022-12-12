@@ -1,4 +1,10 @@
+#include "mainConfig.h"
+
+#ifndef NJFUWORK_FINAL_MAINCONFIG_H
 #include "fake/platform.h"
+#else
+#include <stdint.h>
+#endif
 
 
 typedef struct
