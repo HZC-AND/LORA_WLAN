@@ -1,3 +1,15 @@
+/**
+ * @file network_layer.c
+ * 
+ * @author HZC (woshihuzhicheng@njfu.edu.cn)
+ * @brief 网络层，同步发送，异步接收
+ * @version 0.1
+ * @date 2022-12-14
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 
 #include "network_layer.h"
 #include "data_link_layer.h"
@@ -51,6 +63,21 @@ uint8_t waiting_ack_frame_timer_timeout;//等待超时标志
 
 /* 转发表计数器 */
 /* *********** */
+
+/* TOF相关时间变量 */
+//TOF发起端
+uint64_t t1,t4,t5;
+TOF_delta_t_t delta_t_3_2_receiver;
+TOF_delta_t_t delta_t_6_3_receiver;
+//TOF接收端
+uint64_t t2,t3,t6;
+TOF_delta_t_t delta_t_3_2_sender;
+TOF_delta_t_t delta_t_6_3_serder;
+/*****************/
+
+/* TOF接收数据报文 */
+network_layer_TOF_frame_t network_layer_TOF_frame_received;
+/* ************* */
 
 void network_layer_init(void){
 
@@ -114,25 +141,78 @@ void network_layer_location_ack_frame_send(void){
     network_layer_data_frame.frame_type = location_ack_frame;
     // data_link_layer_send();
 }
-
+/**
+ * @brief 重发送帧发送函数
+ * 
+ */
 void network_layer_retransmission_frame_send(void){
     network_layer_data_frame_t network_layer_data_frame;
     network_layer_data_frame.frame_type = retransmission_frame;
     // data_link_layer_send();
 }
-
+/**
+ * @brief data ack 帧发送函数
+ * 
+ */
 void network_layer_data_ack_frame_send(void){
-    network_layer_data_ack_frame_t network_layer_data_frame;
-    network_layer_data_frame.frame_type = data_ack_frame;
-    // data_link_layer_send();
+    uint8_t result = 0;
+    
+    network_layer_data_ack_frame_t network_layer_data_ack_frame;
+    network_layer_data_ack_frame.frame_type = data_ack_frame;
+    network_layer_data_ack_frame.from_mac_address = Current_MAC_Address;
+    network_layer_data_ack_frame.to_mac_address = network_layer_receive_data.from_mac_address;
+    result = data_link_layer_send(&network_layer_data_ack_frame);
+   
+    return result;
+}
+/**
+ * @brief TOF帧发送函数
+ * 
+ */
+void network_layer_TOF_frame_send(uint8_t to_mac_address){
+    uint8_t result = 0;
+
+    network_layer_TOF_frame_t network_layer_TOF_frame;
+    network_layer_TOF_frame.frame_type = TOF_frame;
+    network_layer_TOF_frame.from_mac_address = Current_MAC_Address;
+    network_layer_TOF_frame.to_mac_address = to_mac_address;
+    network_layer_TOF_frame.delta_t[0] = 0;
+    network_layer_TOF_frame.delta_t[1] = 0;
+    network_layer_TOF_frame.delta_t[2] = 0;
+    network_layer_TOF_frame.delta_t[3] = 0;
+    network_layer_TOF_frame.delta_t[4] = 0;
+    network_layer_TOF_frame.delta_t[5] = 0;
+    result = data_link_layer_send(&network_layer_TOF_frame);
+
+    return result;
 }
 
+void network_layer_TOF_frame_receive(uint8_t* data){
+
+}
+
+void TOF_process(void){
+
+}
+
+/**
+ * @brief 数据接收call_back
+ * 
+ * @param data 
+ * @param length 
+ * @return uint8_t 
+ */
 uint8_t network_layer_receive_callback(uint8_t* data, uint8_t length){
     (void)copy_data_to_receive_frame(data);
     return 1;
 }
 
-/* copy数据至buffer */
+/**
+ * @brief copy数据至buffer
+ * 
+ * @param buffer 
+ * @param network_layer_data_frame 
+ */
 void copy_data_to_send_buffer(uint8_t* buffer, network_layer_data_frame_t* network_layer_data_frame){
     buffer[0] = network_layer_data_frame->frame_type;
     buffer[1] = network_layer_data_frame->message_number;
@@ -145,7 +225,12 @@ void copy_data_to_send_buffer(uint8_t* buffer, network_layer_data_frame_t* netwo
     }
 }
 
-/* copy数据至receive frame,从局部变量到全局变量 */
+/**
+ * @brief copy数据至receive frame,从局部变量到全局变量
+ * 
+ * @param data 
+ * @return uint8_t 
+ */
 uint8_t copy_data_to_receive_frame(uint8_t* data){
 
     switch (data[0])
@@ -186,6 +271,15 @@ uint8_t copy_data_to_receive_frame(uint8_t* data){
         case location_ack_frame:
             network_layer_location_ack_frame_t* network_layer_location_ack_frame = (network_layer_location_ack_frame_t*)data;
             break;
+        case TOF_frame:
+            network_layer_TOF_frame_t* network_layer_TOF_frame = (network_layer_TOF_frame_t*)data;
+            network_layer_TOF_frame_received.frame_type = network_layer_TOF_frame->frame_type;
+            network_layer_TOF_frame_received.from_mac_address = network_layer_TOF_frame->from_mac_address;
+            network_layer_TOF_frame_received.to_mac_address = network_layer_TOF_frame->to_mac_address;
+            for(uint8_t i = 0;i < 5;i++){
+                network_layer_TOF_frame_received.delta_t[i] = network_layer_TOF_frame->delta_t[i];
+            }
+            break;
         default:
             break;
     }
@@ -193,7 +287,14 @@ uint8_t copy_data_to_receive_frame(uint8_t* data){
     return 1;
 }
 
- /* 分帧 */
+/**
+ * @brief 分帧
+ * 
+ * @param data 
+ * @param length 
+ * @param to_mac_address 
+ * @return uint8_t 
+ */
 uint8_t split_frame_to_sub_frame_data_table(uint8_t* data, uint8_t length, uint8_t to_mac_address){
     uint8_t frame_number = 0;
 
@@ -228,7 +329,13 @@ uint8_t split_frame_to_sub_frame_data_table(uint8_t* data, uint8_t length, uint8
     return 1;
 }
 
-/* 组帧 */
+/**
+ * @brief 组帧
+ * 
+ * @param data 
+ * @param length 
+ * @return uint8_t 
+ */
 uint8_t combine_sub_frame_data(uint8_t* data, uint8_t length){
     //存入表中
     //当完整收到所有数据后将表组合成一个网络层数据。
@@ -337,6 +444,7 @@ void network_layer_ack_timer_management(void){
             waiting_ack_frame_timer_timeout = 0;
         }
     }else{
+        waiting_ack_frame_timer_timeout = 0;
         waiting_ack_frame_timer_counter = 10;
     }
 }
@@ -375,6 +483,7 @@ void network_layer_main_function(void){
                     network_layer_receive_data.data = network_layer_receive_data_frame.data;
                     network_layer_receive_data.length = network_layer_receive_data_frame.data_length;
                     //发送ACK报文
+                    network_layer_data_ack_frame_send();
                     //调用上层CallBack
                     /* **************** */
                 }
@@ -440,6 +549,9 @@ void network_layer_main_function(void){
                 /* 确认为本机接收报文 */
                 /* **************** */
                 network_layer_receive_state = idle;
+                break;
+            case received_TOF_frame:
+                TOF_process();
                 break;
             default:
 

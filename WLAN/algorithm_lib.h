@@ -1,3 +1,14 @@
+/**
+ * @file algorithm_lib.h
+ * @author HZC (woshihuzhicheng@njfu.edu.cn)
+ * @brief 
+ * @version 0.1
+ * @date 2022-12-14
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include "mainConfig.h"
 
 #ifndef NJFUWORK_FINAL_MAINCONFIG_H

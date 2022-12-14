@@ -1,3 +1,15 @@
+/**
+ * @file network_layer.h
+ * 
+ * @author HZC (woshihuzhicheng@njfu.edu.cn)
+ * @brief 
+ * @version 0.1
+ * @date 2022-12-14
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 
 #include "mainConfig.h"
 
@@ -17,6 +29,7 @@ typedef enum{
     retransmission_frame,
     location_frame,
     location_ack_frame,
+    TOF_frame,
 }network_layer_frame_type_enum;
 
 /* 网络层数据发送状态 */
@@ -42,6 +55,7 @@ typedef enum{
     received_retransmission_frame,
     received_location_frame,
     received_location_ack_frame,
+    received_TOF_frame,
 }network_layer_receive_state_enum;
 
 /* 需要接收ACK的信息 */
@@ -134,6 +148,30 @@ typedef struct
     uint8_t rssi_data;
 }network_layer_location_ack_frame_t;
 
+/**
+ * @brief TOF 结构体
+ * 
+ */
+typedef struct
+{
+    uint8_t frame_type;
+    uint8_t from_mac_address;
+    uint8_t to_mac_address; 
+    uint8_t delta_t[5];
+}network_layer_TOF_frame_t;
+
+typedef struct
+{
+    uint64_t time_ns      : 10;
+    uint64_t time_us      : 10;
+    uint64_t time_ms      : 10;
+    uint64_t time_s       : 6;
+    uint64_t step         : 4;
+    uint64_t reserve      : 8;
+}TOF_delta_t_t;
+
+/* ******************** */
+
 /* 报文转发表处理,栈处理或队列处理 */
 // /* 数据报文转发表结构 */
 
@@ -163,13 +201,16 @@ typedef struct
 
 
 
-
 void network_layer_init(void);
 uint8_t network_layer_data_frame_send(uint8_t* data, uint8_t length, uint8_t to_mac_address);
 void network_layer_location_frame_send(void);
 void network_layer_location_ack_frame_send(void);
 void network_layer_retransmission_frame_send(void);
 void network_layer_data_ack_frame_send(void);
+void network_layer_TOF_frame_send(void);
+void network_layer_TOF_frame_receive(uint8_t* data);
+
+void TOF_process(void);
 
 void copy_data_to_send_buffer(uint8_t* buffer, network_layer_data_frame_t* network_layer_data_frame);
 // void copy_data_to_receive_buffer(network_layer_data_frame_t* network_layer_data_frame);

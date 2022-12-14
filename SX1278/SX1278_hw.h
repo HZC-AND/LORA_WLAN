@@ -1,3 +1,14 @@
+/**
+ * @file SX1278_hw.h
+ * @author HZC (woshihuzhicheng@njfu.edu.cn)
+ * @brief 
+ * @version 0.1
+ * @date 2022-12-14
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #ifndef __SX1278_HW_HEADER
 #define __SX1278_HW_HEADER
 

@@ -1,4 +1,13 @@
-
+/**
+ * @file SX1278.h
+ * @author HZC (woshihuzhicheng@njfu.edu.cn)
+ * @brief 
+ * @version 0.1
+ * @date 2022-12-14
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 
 // #define RegFifo 0x00        //FIFO读/写访问
 // #define RegOpMode 0x01     //运行模式&LoRaTM/FSK 选择

@@ -1,3 +1,14 @@
+/**
+ * @file SX1278.c
+ * @author HZC (woshihuzhicheng@njfu.edu.cn)
+ * @brief 
+ * @version 0.1
+ * @date 2022-12-14
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include "SX1278.h"
 #include <string.h>
 

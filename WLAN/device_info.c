@@ -1,3 +1,14 @@
+/**
+ * @file device_info.c
+ * @author HZC (woshihuzhicheng@njfu.edu.cn)
+ * @brief 
+ * @version 0.1
+ * @date 2022-12-14
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include "device_info.h"
 
 communication_mode_enum Communication_Mode = point_to_point;

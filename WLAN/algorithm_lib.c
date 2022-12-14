@@ -1,3 +1,14 @@
+/**
+ * @file algorithm_lib.c
+ * @author HZC (woshihuzhicheng@njfu.edu.cn)
+ * @brief 
+ * @version 0.1
+ * @date 2022-12-14
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 
 #include "algorithm_lib.h"
 

@@ -1,3 +1,14 @@
+/**
+ * @file data_link_layer.h
+ * @author HZC (woshihuzhicheng@njfu.edu.cn)
+ * @brief 
+ * @version 0.1
+ * @date 2022-12-14
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 /* 数据分帧，流控，地址寻址，重发*/
 
 #include "mainConfig.h"
