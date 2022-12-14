@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="yLtbUKuZxLzs7Zki0nff" name="通信协议架构">
-        <mxGraphModel dx="976" dy="1722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="960" dy="1722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="iFZXWEeWM3QpYLgtQmsO-0"/>
                 <mxCell id="iFZXWEeWM3QpYLgtQmsO-1" parent="iFZXWEeWM3QpYLgtQmsO-0"/>
@@ -249,7 +249,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="6gUuc052qOnKWtWP-L-i" name="网络层数据格式">
-        <mxGraphModel dx="1627" dy="461" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="2304" dy="851" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="aevX1FBp8jtBNWZgY23v-0"/>
                 <mxCell id="aevX1FBp8jtBNWZgY23v-1" parent="aevX1FBp8jtBNWZgY23v-0"/>

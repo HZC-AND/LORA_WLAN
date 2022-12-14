@@ -170,6 +170,13 @@ typedef struct
     uint64_t reserve      : 8;
 }TOF_delta_t_t;
 
+typedef enum{
+    step1,
+    step2,
+    step3,
+    step4,
+}TOF_step_enum;
+
 /* ******************** */
 
 /* 报文转发表处理,栈处理或队列处理 */
@@ -207,10 +214,8 @@ void network_layer_location_frame_send(void);
 void network_layer_location_ack_frame_send(void);
 void network_layer_retransmission_frame_send(void);
 void network_layer_data_ack_frame_send(void);
-void network_layer_TOF_frame_send(void);
-void network_layer_TOF_frame_receive(uint8_t* data);
-
-void TOF_process(void);
+void network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address);
+void network_layer_TOF_frame_receive(network_layer_TOF_frame_t network_layer_TOF_frame);
 
 void copy_data_to_send_buffer(uint8_t* buffer, network_layer_data_frame_t* network_layer_data_frame);
 // void copy_data_to_receive_buffer(network_layer_data_frame_t* network_layer_data_frame);

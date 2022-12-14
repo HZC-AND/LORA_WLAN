@@ -2,7 +2,7 @@
  * @file network_layer.c
  * 
  * @author HZC (woshihuzhicheng@njfu.edu.cn)
- * @brief 网络层，同步发送，异步接收
+ * @brief 网络层，除TOF和RSSI定位，其余报文为异步发送异步接收
  * @version 0.1
  * @date 2022-12-14
  * 
@@ -65,14 +65,15 @@ uint8_t waiting_ack_frame_timer_timeout;//等待超时标志
 /* *********** */
 
 /* TOF相关时间变量 */
+/* TODO:考虑us级硬件定时器的使用 */
 //TOF发起端
 uint64_t t1,t4,t5;
-TOF_delta_t_t delta_t_3_2_receiver;
-TOF_delta_t_t delta_t_6_3_receiver;
+TOF_delta_t_t delta_t_3_2_sender_side;
+TOF_delta_t_t delta_t_6_3_serder_side;
 //TOF接收端
 uint64_t t2,t3,t6;
-TOF_delta_t_t delta_t_3_2_sender;
-TOF_delta_t_t delta_t_6_3_serder;
+TOF_delta_t_t delta_t_3_2_receiver_side;
+TOF_delta_t_t delta_t_6_3_receiver_side;
 /*****************/
 
 /* TOF接收数据报文 */
@@ -83,7 +84,7 @@ void network_layer_init(void){
 
     network_layer_receive_data_frame.data = &receive_data_buffer[0];
 
-    /* network_layer_send_data 初始化 */
+    /* TODO:network_layer_send_data 初始化 */
 
     /* network_layer_sub_frame_send_data 初始化 */
     network_layer_sub_frame_send_data.current_frame_number = 1;
@@ -130,12 +131,13 @@ uint8_t network_layer_data_frame_send(uint8_t* data, uint8_t length, uint8_t to_
     return 1;
 }
 
+/* TODO:完善函数 */
 void network_layer_location_frame_send(void){
     network_layer_data_frame_t network_layer_data_frame;
     network_layer_data_frame.frame_type = location_frame;
     // data_link_layer_send();
 }
-
+/* TODO:完善函数 */
 void network_layer_location_ack_frame_send(void){
     network_layer_data_frame_t network_layer_data_frame;
     network_layer_data_frame.frame_type = location_ack_frame;
@@ -145,6 +147,7 @@ void network_layer_location_ack_frame_send(void){
  * @brief 重发送帧发送函数
  * 
  */
+/* TODO:完善函数 */
 void network_layer_retransmission_frame_send(void){
     network_layer_data_frame_t network_layer_data_frame;
     network_layer_data_frame.frame_type = retransmission_frame;
@@ -165,33 +168,82 @@ void network_layer_data_ack_frame_send(void){
    
     return result;
 }
+
 /**
  * @brief TOF帧发送函数
  * 
+ * @param step 
+ * @param to_mac_address 
  */
-void network_layer_TOF_frame_send(uint8_t to_mac_address){
+void network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address){
     uint8_t result = 0;
 
     network_layer_TOF_frame_t network_layer_TOF_frame;
     network_layer_TOF_frame.frame_type = TOF_frame;
     network_layer_TOF_frame.from_mac_address = Current_MAC_Address;
     network_layer_TOF_frame.to_mac_address = to_mac_address;
-    network_layer_TOF_frame.delta_t[0] = 0;
-    network_layer_TOF_frame.delta_t[1] = 0;
-    network_layer_TOF_frame.delta_t[2] = 0;
-    network_layer_TOF_frame.delta_t[3] = 0;
-    network_layer_TOF_frame.delta_t[4] = 0;
-    network_layer_TOF_frame.delta_t[5] = 0;
+    /* TODO:接收或发送的数组是MSB还是LSB需要验证 */
+    switch (step)
+    {
+        case step1:
+            network_layer_TOF_frame.delta_t[4] = 0;
+            network_layer_TOF_frame.delta_t[3] = 0;
+            network_layer_TOF_frame.delta_t[2] = 0;
+            network_layer_TOF_frame.delta_t[1] = 0;
+            network_layer_TOF_frame.delta_t[0] = 0;
+            break;
+        case step2:
+            network_layer_TOF_frame.delta_t[4] = delta_t_3_2_receiver_side.time_ns; 
+            network_layer_TOF_frame.delta_t[3] = (delta_t_3_2_receiver_side.time_ns >> 8) | (delta_t_3_2_receiver_side.time_us << 2);
+            network_layer_TOF_frame.delta_t[2] = (delta_t_3_2_receiver_side.time_us >> 6) | (delta_t_3_2_receiver_side.time_ms << 4);
+            network_layer_TOF_frame.delta_t[1] = (delta_t_3_2_receiver_side.time_ms >> 4) | (delta_t_3_2_receiver_side.time_s << 6);
+            network_layer_TOF_frame.delta_t[0] = (delta_t_3_2_receiver_side.time_s >> 2) | step;
+            break;
+        case step3:
+            network_layer_TOF_frame.delta_t[4] = 0;
+            network_layer_TOF_frame.delta_t[3] = 0;
+            network_layer_TOF_frame.delta_t[2] = 0;
+            network_layer_TOF_frame.delta_t[1] = 0;
+            network_layer_TOF_frame.delta_t[0] = 0;
+            break;
+        case step4:
+            network_layer_TOF_frame.delta_t[4] = delta_t_6_3_receiver_side.time_ns; 
+            network_layer_TOF_frame.delta_t[3] = (delta_t_6_3_receiver_side.time_ns >> 8) | (delta_t_6_3_receiver_side.time_us << 2);
+            network_layer_TOF_frame.delta_t[2] = (delta_t_6_3_receiver_side.time_us >> 6) | (delta_t_6_3_receiver_side.time_ms << 4);
+            network_layer_TOF_frame.delta_t[1] = (delta_t_6_3_receiver_side.time_ms >> 4) | (delta_t_6_3_receiver_side.time_s << 6);
+            network_layer_TOF_frame.delta_t[0] = (delta_t_6_3_receiver_side.time_s >> 2) | step;
+            break;
+        default:
+            break;
+    }
+
     result = data_link_layer_send(&network_layer_TOF_frame);
 
     return result;
 }
 
-void network_layer_TOF_frame_receive(uint8_t* data){
+void network_layer_TOF_frame_receive(network_layer_TOF_frame_t network_layer_TOF_frame){
+    TOF_delta_t_t TOF_delta_t;
 
-}
+    TOF_delta_t.time_ns = network_layer_TOF_frame.delta_t[4] | (network_layer_TOF_frame.delta_t[3] & 0x3);
+    TOF_delta_t.time_us = (network_layer_TOF_frame.delta_t[3] >> 2) | (network_layer_TOF_frame.delta_t[2] & 0xF);
+    TOF_delta_t.time_ms = (network_layer_TOF_frame.delta_t[2] >> 4) | (network_layer_TOF_frame.delta_t[1] & 0x3F);
+    TOF_delta_t.time_s = (network_layer_TOF_frame.delta_t[1] >> 4) | (network_layer_TOF_frame.delta_t[0] & 0xF);
+    TOF_delta_t.step = network_layer_TOF_frame.delta_t[0] >> 4;
 
-void TOF_process(void){
+    if(TOF_delta_t.step == step2){
+        delta_t_3_2_sender_side.step = TOF_delta_t.step;
+        delta_t_3_2_sender_side.time_ns = TOF_delta_t.time_ns;
+        delta_t_3_2_sender_side.time_us = TOF_delta_t.time_us;
+        delta_t_3_2_sender_side.time_ms = TOF_delta_t.time_ms;
+        delta_t_3_2_sender_side.time_s = TOF_delta_t.time_s;
+    }else if(TOF_delta_t.step == step4){
+        delta_t_6_3_serder_side.step = TOF_delta_t.step;
+        delta_t_6_3_serder_side.time_ns = TOF_delta_t.time_ns;
+        delta_t_6_3_serder_side.time_us = TOF_delta_t.time_us;
+        delta_t_6_3_serder_side.time_ms = TOF_delta_t.time_ms;
+        delta_t_6_3_serder_side.time_s = TOF_delta_t.time_s;
+    }
 
 }
 
@@ -203,6 +255,18 @@ void TOF_process(void){
  * @return uint8_t 
  */
 uint8_t network_layer_receive_callback(uint8_t* data, uint8_t length){
+    /* 同步处理报文 */
+    switch (data[0])
+    {
+        case TOF_frame:
+            network_layer_TOF_frame_t* network_layer_TOF_frame = (network_layer_TOF_frame_t*)data;
+            network_layer_TOF_frame_receive(network_layer_TOF_frame);
+            break;
+        
+        default:
+            break;
+    }
+    /* 异步处理报文 */
     (void)copy_data_to_receive_frame(data);
     return 1;
 }
@@ -263,22 +327,16 @@ uint8_t copy_data_to_receive_frame(uint8_t* data){
             /* ***** */
             break;
         case retransmission_frame:
+            /* TODO: */
             network_layer_retransmission_frame_t* network_layer_retransmission_frame = (network_layer_retransmission_frame_t*)data;
             break;
         case location_frame:
+            /* TODO: */
             network_layer_location_frame_t* network_layer_location_frame = (network_layer_location_frame_t*)data;
             break;
         case location_ack_frame:
+            /* TODO: */
             network_layer_location_ack_frame_t* network_layer_location_ack_frame = (network_layer_location_ack_frame_t*)data;
-            break;
-        case TOF_frame:
-            network_layer_TOF_frame_t* network_layer_TOF_frame = (network_layer_TOF_frame_t*)data;
-            network_layer_TOF_frame_received.frame_type = network_layer_TOF_frame->frame_type;
-            network_layer_TOF_frame_received.from_mac_address = network_layer_TOF_frame->from_mac_address;
-            network_layer_TOF_frame_received.to_mac_address = network_layer_TOF_frame->to_mac_address;
-            for(uint8_t i = 0;i < 5;i++){
-                network_layer_TOF_frame_received.delta_t[i] = network_layer_TOF_frame->delta_t[i];
-            }
             break;
         default:
             break;
@@ -337,6 +395,7 @@ uint8_t split_frame_to_sub_frame_data_table(uint8_t* data, uint8_t length, uint8
  * @return uint8_t 
  */
 uint8_t combine_sub_frame_data(uint8_t* data, uint8_t length){
+    /* TODO: */
     //存入表中
     //当完整收到所有数据后将表组合成一个网络层数据。
 }
@@ -411,10 +470,12 @@ static uint8_t network_layer_data_frame_send_multiple_frame(void){
     return result;
 }
 
-/* 
-报文转发表定时器管理
+/**
+ * @brief 报文转发表定时器管理
+ * 
  */
 void network_layer_forwarding_table_timer_management(void){
+    /* TODO:放入OS周期task中 */
     /* 数据 */
     for(uint8_t i = 0;i <= data_frame_forwarding_table_stack.stack_top_index;i++){
         network_layer_data_frame_forwarding_table[i].time_counter--;
@@ -432,10 +493,12 @@ void network_layer_forwarding_table_timer_management(void){
     }
 }
 
-/* 
-ACK定时器管理
+/**
+ * @brief ACK定时器管理
+ * 
  */
 void network_layer_ack_timer_management(void){
+    /* TODO:放入OS周期task中 */
     if(waiting_ack_frame_timer_start){
         waiting_ack_frame_timer_counter--;
         if(waiting_ack_frame_timer_counter == 0){
@@ -449,8 +512,9 @@ void network_layer_ack_timer_management(void){
     }
 }
 
-/* 
-网络层主函数
+/**
+ * @brief 网络层主函数
+ * 
  */
 void network_layer_main_function(void){
     if(network_layer_receive_state != idle){
@@ -484,7 +548,8 @@ void network_layer_main_function(void){
                     network_layer_receive_data.length = network_layer_receive_data_frame.data_length;
                     //发送ACK报文
                     network_layer_data_ack_frame_send();
-                    //调用上层CallBack
+                    /* TODO:调用上层CallBack */
+
                     /* **************** */
                 }
 
@@ -521,37 +586,36 @@ void network_layer_main_function(void){
                         network_layer_send_state = sending_multiple_data_frame;/* 通知继续发送多帧 */
                     }
                     waiting_ack_frame_timer_start = 0;//关闭ACK超时定时器
-                    //调用上层CallBack
+                    /* TODO:调用上层CallBack */
                     /* **************** */
                 }
                 network_layer_receive_state = idle;
                 break;
             case received_retransmission_frame:
-                /* 处理转发逻辑 */
+                /* TODO:处理转发逻辑 */
                 /* *********** */
 
-                /* 确认为本机接收报文 */
+                /* TODO:确认为本机接收报文 */
                 /* **************** */
                 network_layer_receive_state = idle;
                 break;
             case received_location_frame:
-                /* 处理转发逻辑 */
+                /* TODO:处理转发逻辑 */
                 /* *********** */
 
-                /* 确认为本机接收报文 */
+                /* TODO:确认为本机接收报文 */
                 /* **************** */
                 network_layer_receive_state = idle;
                 break;
             case received_location_ack_frame:
-                /* 处理转发逻辑 */
+                /* TODO:处理转发逻辑 */
                 /* *********** */
 
-                /* 确认为本机接收报文 */
+                /* TODO:确认为本机接收报文 */
                 /* **************** */
                 network_layer_receive_state = idle;
                 break;
             case received_TOF_frame:
-                TOF_process();
                 break;
             default:
 
