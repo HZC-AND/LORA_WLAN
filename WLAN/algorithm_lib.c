@@ -13,7 +13,7 @@
 #include "algorithm_lib.h"
 
 /* 栈处理逻辑代码 */
-uint8_t stack_push(stack_t* this, uint8_t* data){
+uint8_t stack_push(struct stack* this, uint8_t* data){
     if(this->is_full == 1){
         /* 栈满 */
         return 0;
@@ -32,7 +32,7 @@ uint8_t stack_push(stack_t* this, uint8_t* data){
     return 1;
 } 
 
-uint8_t stack_pop(stack_t* this, uint8_t* data){
+uint8_t stack_pop(struct stack* this, uint8_t* data){
     if(this->stack_top_index == 0){
         /* 栈空 */
         return 0;
@@ -48,7 +48,7 @@ uint8_t stack_pop(stack_t* this, uint8_t* data){
     return 1;
 }
 
-uint8_t stack_delete(stack_t* this, uint8_t* data){
+uint8_t stack_delete(struct stack* this, uint8_t* data){
     uint8_t find_index = this->stack_length;//初始为超出范围值
     uint8_t delete_state = 0;
     /* 遍历搜索，后续可尝试使用更高效的查找法，比如二分法 */
@@ -84,13 +84,13 @@ uint8_t stack_delete(stack_t* this, uint8_t* data){
     return 1;
 }
 
-uint8_t stack_clear(stack_t* this){
+uint8_t stack_clear(struct stack* this){
     this->stack_top_index = 0;
     this->is_full = 0;
     return 1;
 }
 
-uint8_t stack_serach(stack_t* this, uint8_t* data){
+uint8_t stack_serach(struct stack* this, uint8_t* data){
     uint8_t find_index = this->stack_length;//初始为超出范围值
     uint8_t delete_state = 0;
     /* 遍历搜索，后续可尝试使用更高效的查找法，比如二分法 */
@@ -119,7 +119,7 @@ uint8_t stack_serach(stack_t* this, uint8_t* data){
     return find_index;
 }
 
-uint8_t stack_create(stack_t* new_stack, uint8_t** data, uint8_t stack_length, uint8_t element_length){
+uint8_t stack_create(struct stack* new_stack, uint8_t** data, uint8_t stack_length, uint8_t element_length){
     new_stack->stack_top_index = 0;
     new_stack->is_full = 0;
     new_stack->stack_length = stack_length;

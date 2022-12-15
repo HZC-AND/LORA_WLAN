@@ -374,7 +374,7 @@ uint8_t SX1278_RX_Once(SX1278_t *module, uint8_t length, uint32_t timeout){
     
 
     /* 处理接收 */
-    unsigned char addr;
+//    unsigned char addr;
     unsigned char packet_size;
 
     if (SX1278_hw_GetDIO0(module->hw))
@@ -399,7 +399,7 @@ uint8_t SX1278_RX_Once(SX1278_t *module, uint8_t length, uint32_t timeout){
     }
 
     // SX1278_standby(module); // Entry standby mode
-    SX1278_sleep();//进入睡眠模式
+//    SX1278_sleep();//进入睡眠模式
 
     return module->readBytes;
 }
@@ -462,7 +462,7 @@ uint8_t SX1278_TX_Once(SX1278_t *module, uint8_t *txBuffer, uint8_t length, uint
         SX1278_hw_DelayMs(1);
     }
 
-    SX1278_sleep();//进入睡眠模式
+//    SX1278_sleep();//进入睡眠模式
 }
 
 void SX1278_CAD_Mode(){

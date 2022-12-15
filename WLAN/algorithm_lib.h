@@ -18,7 +18,7 @@
 #endif
 
 
-typedef struct
+typedef struct stack
 {
     /* 栈顶索引 */
     uint8_t stack_top_index;
@@ -28,21 +28,21 @@ typedef struct
     uint8_t stack_length;
     /* 每个元素的大小, 即sizeof(forwarding_table_t) */
     uint8_t element_length;
-    uint8_t (*push)(stack_t*, uint8_t*);
-    uint8_t (*pop)(stack_t*, uint8_t*);
-    uint8_t (*delete)(stack_t*, uint8_t*);
-    uint8_t (*clear)(stack_t*);
-    uint8_t (*serach)(stack_t*, uint8_t*);
+    uint8_t (*push)(struct stack*, uint8_t*);
+    uint8_t (*pop)(struct stack*, uint8_t*);
+    uint8_t (*delete)(struct stack*, uint8_t*);
+    uint8_t (*clear)(struct stack*);
+    uint8_t (*serach)(struct stack*, uint8_t*);
     uint8_t** data;
 }stack_t;
 
 /* 栈函数 */
-uint8_t stack_push(stack_t* this, uint8_t* data); 
-uint8_t stack_pop(stack_t* this, uint8_t* data);
-uint8_t stack_delete(stack_t* this, uint8_t* data);
-uint8_t stack_clear(stack_t* this);
-uint8_t stack_serach(stack_t* this, uint8_t* data);
-uint8_t stack_create(stack_t* new_stack, uint8_t** data, uint8_t stack_length, uint8_t element_length);
+uint8_t stack_push(struct stack* this, uint8_t* data);
+uint8_t stack_pop(struct stack* this, uint8_t* data);
+uint8_t stack_delete(struct stack* this, uint8_t* data);
+uint8_t stack_clear(struct stack* this);
+uint8_t stack_serach(struct stack* this, uint8_t* data);
+uint8_t stack_create(struct stack* new_stack, uint8_t** data, uint8_t stack_length, uint8_t element_length);
 /* ***** */
 
 /* CRC */

@@ -34,7 +34,7 @@ typedef enum{
 
 /* 网络层数据发送状态 */
 typedef enum{
-    idle,
+    sending_idle,
     sending_single_data_frame,   //正在发送单帧数据帧
     sending_multiple_data_frame, //正在发送多帧数据帧
     sending_data_ack_frame,
@@ -48,7 +48,7 @@ typedef enum{
 
 /* 网络层数据接收状态 */
 typedef enum{
-    idle,
+    received_idle,
     received_single_data_frame,//接收到单帧
     received_multiple_data_frame,//接收到多帧
     received_data_ack_frame,

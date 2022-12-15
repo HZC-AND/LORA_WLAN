@@ -533,9 +533,13 @@
 #ifndef __SX1278_H__
 #define __SX1278_H__
 
-#include "../fake/platform.h" //HZC Added in 2022-11-16
+#include "mainConfig.h"
 
+#ifndef NJFUWORK_FINAL_MAINCONFIG_H
+#include "../fake/platform.h" //HZC Added in 2022-11-16
+#else
 #include <stdint.h>
+#endif
 #include <stdbool.h>
 
 #include "SX1278_hw.h"

@@ -70,7 +70,7 @@ uint8_t data_link_layer_send(uint8_t* data){
     data_length = data_link_layer_frame.data_length + 4;
 
     /* Copy数据到buffer */
-    data_send_buffer_for_sx1278[0] = (uint8_t)(data_link_layer_frame.function);
+    data_send_buffer_for_sx1278[0] = (uint8_t)(*(uint8_t*)(&data_link_layer_frame.function));
     data_send_buffer_for_sx1278[1] = data_link_layer_frame.MAC_Address;
     data_send_buffer_for_sx1278[2] = data_link_layer_frame.data_length;
     for (uint8_t i = 0; i < data_link_layer_frame.data_length; i++)
@@ -102,7 +102,9 @@ uint8_t data_link_layer_receive_callback(uint8_t* data, uint8_t length){
         //crc验证不正确
         return 0;
     }
-    data_link_layer_frame_receive.function = (data_link_layer_function_t)data[0];
+    data_link_layer_frame_receive.function.conmunication_mode = data[0] & 0x3;
+    data_link_layer_frame_receive.function.channel_selection = (data[0] >> 2) & 0xF;
+    data_link_layer_frame_receive.function.multicast_grouping = data[0] >> 6;
     data_link_layer_frame_receive.MAC_Address = data[1];
     data_link_layer_frame_receive.data_length = data[2];
     data_link_layer_frame_receive.CRC_8 = data[length - 1];
