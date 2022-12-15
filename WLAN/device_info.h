@@ -44,4 +44,4 @@ typedef enum{
 
 extern communication_mode_enum Communication_Mode;
 extern communication_mode_enum receive_data_communication_mode;
-extern uint8_t channel_selection_table[];
+extern uint64_t channel_selection_table[];

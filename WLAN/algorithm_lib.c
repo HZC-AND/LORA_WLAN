@@ -26,7 +26,8 @@ uint8_t stack_push(struct stack* this, uint8_t* data){
     // this->data[this->i]->to_mac_address = data->to_mac_address;
     // this->data[this->i]->crc_8 = data->crc_8;
     for(uint8_t i = 0;i < this->element_length;i++){
-        this->data[this->stack_top_index][i] = data[i];
+//        this->data[this->stack_top_index][i] = data[i];
+        *(this->data + this->stack_top_index * this->element_length + i) = data[i];
     }
     
     return 1;
@@ -38,7 +39,8 @@ uint8_t stack_pop(struct stack* this, uint8_t* data){
         return 0;
     }
     for(uint8_t i = 0;i < this->element_length;i++){
-        data[i] = this->data[this->stack_top_index][i];
+//        data[i] = this->data[this->stack_top_index][i];
+        data[i] = *(this->data + this->stack_top_index * this->element_length + i);
     }
     this->stack_top_index--;
     if(this->stack_top_index == 0){
@@ -54,7 +56,7 @@ uint8_t stack_delete(struct stack* this, uint8_t* data){
     /* 遍历搜索，后续可尝试使用更高效的查找法，比如二分法 */
     for(uint8_t i = 0;i <= this->stack_top_index;i++){
         for(uint8_t j = 0;j < this->element_length;j++){
-            if(data[j] == this->data[i][j]){
+            if(data[j] == *(this->data + i * this->element_length + j)){
                 find_index = i;
             }else{
                 find_index = this->stack_length;
@@ -66,7 +68,8 @@ uint8_t stack_delete(struct stack* this, uint8_t* data){
             for(uint8_t j = 0;j <= (this->stack_top_index - 1);j++){
                 for(uint8_t k = 0;k < this->element_length;k++){
                     /* 后面元素覆盖前面元素 */
-                    this->data[j][k] = this->data[j+1][k];
+//                    this->data[j][k] = this->data[j+1][k];
+                    *(this->data + j * this->element_length + k) = *(this->data + (i + 1) * this->element_length + k);
                 }
             }
             delete_state = 1;
@@ -90,14 +93,15 @@ uint8_t stack_clear(struct stack* this){
     return 1;
 }
 
-uint8_t stack_serach(struct stack* this, uint8_t* data){
+uint8_t stack_search(struct stack* this, uint8_t* data){
     uint8_t find_index = this->stack_length;//初始为超出范围值
     uint8_t delete_state = 0;
     /* 遍历搜索，后续可尝试使用更高效的查找法，比如二分法 */
     for(uint8_t i = 0;i <= this->stack_top_index;i++){
         for(uint8_t j = 0;j < this->element_length;j++){
             if(j != 2){//特殊处理，第三个字节不比较，time_counter
-                if(data[j] == this->data[i][j]){
+//                if(data[j] == this->data[i][j]){
+                if(data[j] == *(this->data + i * this->element_length + j)){
                     find_index = i;
                 }else{
                     find_index = this->stack_length;
@@ -119,7 +123,7 @@ uint8_t stack_serach(struct stack* this, uint8_t* data){
     return find_index;
 }
 
-uint8_t stack_create(struct stack* new_stack, uint8_t** data, uint8_t stack_length, uint8_t element_length){
+uint8_t stack_create(struct stack* new_stack, uint8_t* data, uint8_t stack_length, uint8_t element_length){
     new_stack->stack_top_index = 0;
     new_stack->is_full = 0;
     new_stack->stack_length = stack_length;
@@ -128,7 +132,7 @@ uint8_t stack_create(struct stack* new_stack, uint8_t** data, uint8_t stack_leng
     new_stack->pop = stack_pop;
     new_stack->delete = stack_delete;
     new_stack->clear = stack_clear;
-    new_stack->serach = stack_serach;
+    new_stack->serach = stack_search;
     new_stack->data = data;
 
     return 1;

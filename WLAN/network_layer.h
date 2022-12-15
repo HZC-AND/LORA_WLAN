@@ -213,9 +213,9 @@ uint8_t network_layer_data_frame_send(uint8_t* data, uint8_t length, uint8_t to_
 void network_layer_location_frame_send(void);
 void network_layer_location_ack_frame_send(void);
 void network_layer_retransmission_frame_send(void);
-void network_layer_data_ack_frame_send(void);
-void network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address);
-void network_layer_TOF_frame_receive(network_layer_TOF_frame_t network_layer_TOF_frame);
+uint8_t network_layer_data_ack_frame_send(void);
+uint8_t network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address);
+void network_layer_TOF_frame_receive(network_layer_TOF_frame_t* network_layer_TOF_frame);
 
 void copy_data_to_send_buffer(uint8_t* buffer, network_layer_data_frame_t* network_layer_data_frame);
 // void copy_data_to_receive_buffer(network_layer_data_frame_t* network_layer_data_frame);

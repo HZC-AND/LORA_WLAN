@@ -33,7 +33,7 @@ typedef struct stack
     uint8_t (*delete)(struct stack*, uint8_t*);
     uint8_t (*clear)(struct stack*);
     uint8_t (*serach)(struct stack*, uint8_t*);
-    uint8_t** data;
+    uint8_t* data;
 }stack_t;
 
 /* 栈函数 */
@@ -41,8 +41,8 @@ uint8_t stack_push(struct stack* this, uint8_t* data);
 uint8_t stack_pop(struct stack* this, uint8_t* data);
 uint8_t stack_delete(struct stack* this, uint8_t* data);
 uint8_t stack_clear(struct stack* this);
-uint8_t stack_serach(struct stack* this, uint8_t* data);
-uint8_t stack_create(struct stack* new_stack, uint8_t** data, uint8_t stack_length, uint8_t element_length);
+uint8_t stack_search(struct stack* this, uint8_t* data);
+uint8_t stack_create(struct stack* new_stack, uint8_t* data, uint8_t stack_length, uint8_t element_length);
 /* ***** */
 
 /* CRC */

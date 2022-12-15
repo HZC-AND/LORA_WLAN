@@ -1011,4 +1011,9 @@ void SX1278_standby(SX1278_t *module);
  */
 void SX1278_sleep(SX1278_t *module);
 
+uint8_t SX1278_RX_Once(SX1278_t *module, uint8_t length, uint32_t timeout);
+uint8_t SX1278_TX_Once(SX1278_t *module, uint8_t *txBuffer, uint8_t length, uint32_t timeout);
+void SX1278_CAD_Mode(SX1278_t *module);
+void SX1278_CAD_Detect(SX1278_t *module);
+
 #endif

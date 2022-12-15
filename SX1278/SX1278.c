@@ -461,16 +461,17 @@ uint8_t SX1278_TX_Once(SX1278_t *module, uint8_t *txBuffer, uint8_t length, uint
         }
         SX1278_hw_DelayMs(1);
     }
-
+    /* TODO:完善 */
 //    SX1278_sleep();//进入睡眠模式
 }
 
-void SX1278_CAD_Mode(){
+void SX1278_CAD_Mode(SX1278_t *module){
+    /* TODO:完善 */
     SX1278_SPIWrite(module, LR_RegOpMode, 0x0F);
-    module->status = CAD; 
+    module->status = CAD;
 }
 
 /* CAD检测 */
 void SX1278_CAD_Detect(SX1278_t *module){
-    SX1278_CAD_Mode();//进入CAD模式
+    SX1278_CAD_Mode(module);//进入CAD模式
 }

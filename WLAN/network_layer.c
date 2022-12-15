@@ -91,13 +91,13 @@ void network_layer_init(void){
 
     /* 报文转发表，数据报文转发表栈初始化 */
     stack_create(&data_frame_forwarding_table_stack,
-                 (uint8_t**)network_layer_data_frame_forwarding_table,
+                 (uint8_t*)network_layer_data_frame_forwarding_table,
                   Network_Layer_Data_Frame_Forwarding_Table_Max_Length, 
                   sizeof(forwarding_table_t));
 
     /* 报文转发表，数据Ack报文转发表栈初始化 */
     stack_create(&data_ack_frame_forwarding_table_stack,
-                 (uint8_t**)network_layer_data_ack_frame_forwarding_table,
+                 (uint8_t*)network_layer_data_ack_frame_forwarding_table,
                   Network_Layer_Data_Ack_Frame_Forwarding_Table_Max_Length,
                   sizeof(forwarding_table_t));
 }
@@ -157,14 +157,14 @@ void network_layer_retransmission_frame_send(void){
  * @brief data ack 帧发送函数
  * 
  */
-void network_layer_data_ack_frame_send(void){
+uint8_t network_layer_data_ack_frame_send(void){
     uint8_t result = 0;
     
     network_layer_data_ack_frame_t network_layer_data_ack_frame;
     network_layer_data_ack_frame.frame_type = data_ack_frame;
     network_layer_data_ack_frame.from_mac_address = Current_MAC_Address;
     network_layer_data_ack_frame.to_mac_address = network_layer_receive_data.from_mac_address;
-    result = data_link_layer_send(&network_layer_data_ack_frame);
+    result = data_link_layer_send((uint8_t*)&network_layer_data_ack_frame);
    
     return result;
 }
@@ -175,7 +175,7 @@ void network_layer_data_ack_frame_send(void){
  * @param step 
  * @param to_mac_address 
  */
-void network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address){
+uint8_t network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address){
     uint8_t result = 0;
 
     network_layer_TOF_frame_t network_layer_TOF_frame;
@@ -217,19 +217,19 @@ void network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address){
             break;
     }
 
-    result = data_link_layer_send(&network_layer_TOF_frame);
+    result = data_link_layer_send((uint8_t*)&network_layer_TOF_frame);
 
     return result;
 }
 
-void network_layer_TOF_frame_receive(network_layer_TOF_frame_t network_layer_TOF_frame){
+void network_layer_TOF_frame_receive(network_layer_TOF_frame_t* network_layer_TOF_frame){
     TOF_delta_t_t TOF_delta_t;
 
-    TOF_delta_t.time_ns = network_layer_TOF_frame.delta_t[4] | (network_layer_TOF_frame.delta_t[3] & 0x3);
-    TOF_delta_t.time_us = (network_layer_TOF_frame.delta_t[3] >> 2) | (network_layer_TOF_frame.delta_t[2] & 0xF);
-    TOF_delta_t.time_ms = (network_layer_TOF_frame.delta_t[2] >> 4) | (network_layer_TOF_frame.delta_t[1] & 0x3F);
-    TOF_delta_t.time_s = (network_layer_TOF_frame.delta_t[1] >> 4) | (network_layer_TOF_frame.delta_t[0] & 0xF);
-    TOF_delta_t.step = network_layer_TOF_frame.delta_t[0] >> 4;
+    TOF_delta_t.time_ns = network_layer_TOF_frame->delta_t[4] | (network_layer_TOF_frame->delta_t[3] & 0x3);
+    TOF_delta_t.time_us = (network_layer_TOF_frame->delta_t[3] >> 2) | (network_layer_TOF_frame->delta_t[2] & 0xF);
+    TOF_delta_t.time_ms = (network_layer_TOF_frame->delta_t[2] >> 4) | (network_layer_TOF_frame->delta_t[1] & 0x3F);
+    TOF_delta_t.time_s = (network_layer_TOF_frame->delta_t[1] >> 4) | (network_layer_TOF_frame->delta_t[0] & 0xF);
+    TOF_delta_t.step = network_layer_TOF_frame->delta_t[0] >> 4;
 
     if(TOF_delta_t.step == step2){
         delta_t_3_2_sender_side.step = TOF_delta_t.step;
@@ -258,9 +258,10 @@ uint8_t network_layer_receive_callback(uint8_t* data, uint8_t length){
     /* 同步处理报文 */
     switch (data[0])
     {
-        case TOF_frame:
-            network_layer_TOF_frame_t* network_layer_TOF_frame = (network_layer_TOF_frame_t*)data;
-            network_layer_TOF_frame_receive(network_layer_TOF_frame);
+        case TOF_frame: {
+                network_layer_TOF_frame_t *network_layer_TOF_frame = (network_layer_TOF_frame_t *) data;
+                network_layer_TOF_frame_receive(network_layer_TOF_frame);
+            }
             break;
         
         default:
@@ -460,7 +461,7 @@ static uint8_t network_layer_data_frame_send_multiple_frame(void){
     network_layer_data_frame.message_counter = network_layer_sub_frame_send_data.current_frame_number;
     network_layer_data_frame.from_mac_address = Current_MAC_Address;
     network_layer_data_frame.to_mac_address = network_layer_sub_frame_send_data.to_mac_address;
-    network_layer_data_frame.data = &network_layer_sub_frame_send_data.network_layer_sub_frame_data_table[network_layer_sub_frame_send_data.current_frame_number - 1];
+    network_layer_data_frame.data = (uint8_t*)(&network_layer_sub_frame_send_data.network_layer_sub_frame_data_table[network_layer_sub_frame_send_data.current_frame_number - 1]);
     /*copy数据至buffer*/
     uint8_t network_layer_data_buffer[MAX_DATA_LENGTH + 6];
     copy_data_to_send_buffer(&network_layer_data_buffer[0],&network_layer_data_frame);
@@ -484,7 +485,7 @@ void network_layer_forwarding_table_timer_management(void){
     for(uint8_t i = 0;i <= data_frame_forwarding_table_stack.stack_top_index;i++){
         network_layer_data_frame_forwarding_table[i].time_counter--;
         if(network_layer_data_frame_forwarding_table[i].time_counter == 0){
-            data_frame_forwarding_table_stack.delete(&data_frame_forwarding_table_stack, &network_layer_data_frame_forwarding_table[i]);
+            data_frame_forwarding_table_stack.delete(&data_frame_forwarding_table_stack, (uint8_t*)&network_layer_data_frame_forwarding_table[i]);
         }
     }
 
@@ -492,7 +493,7 @@ void network_layer_forwarding_table_timer_management(void){
     for(uint8_t i = 0;i <= data_ack_frame_forwarding_table_stack.stack_top_index;i++){
         network_layer_data_ack_frame_forwarding_table[i].time_counter--;
         if(network_layer_data_ack_frame_forwarding_table[i].time_counter == 0){
-            data_ack_frame_forwarding_table_stack.delete(&data_ack_frame_forwarding_table_stack, &network_layer_data_ack_frame_forwarding_table[i]);
+            data_ack_frame_forwarding_table_stack.delete(&data_ack_frame_forwarding_table_stack, (uint8_t*)&network_layer_data_ack_frame_forwarding_table[i]);
         }
     }
 }
@@ -577,7 +578,7 @@ void network_layer_main_function(void){
                         /* 没有搜索到，push进表，并转发 */
                         data_ack_frame_forwarding_table_stack.push(&data_ack_frame_forwarding_table_stack,
                                                                 (uint8_t*)&forwarding_table_data);//push进表
-                        network_layer_data_frame_send_single_frame_forwarding(&network_layer_receive_data_ack_frame);//转发报文
+                        network_layer_data_frame_send_single_frame_forwarding((network_layer_data_frame_t*)&network_layer_receive_data_ack_frame);//转发报文
                     }else{
                         /* 不做处理，丢弃该报文 */
                     }
