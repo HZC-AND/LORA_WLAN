@@ -32,7 +32,7 @@ typedef struct stack
     uint8_t (*pop)(struct stack*, uint8_t*);
     uint8_t (*delete)(struct stack*, uint8_t*);
     uint8_t (*clear)(struct stack*);
-    uint8_t (*serach)(struct stack*, uint8_t*);
+    uint8_t (*search)(struct stack*, uint8_t*);
     uint8_t* data;
 }stack_t;
 

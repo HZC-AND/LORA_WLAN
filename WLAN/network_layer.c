@@ -37,6 +37,9 @@ network_layer_data_frame_t network_layer_receive_data_frame;
 network_layer_data_ack_frame_t network_layer_receive_data_ack_frame;
 /* **************** */
 
+/* 发送数据的全局变量 */
+/* *************** */
+
 /* 报文转发表 */
 #define Network_Layer_Data_Frame_Forwarding_Table_Max_Length 10
 #define Network_Layer_Data_Frame_Forwarding_Element_Max_Time_Counter 5
@@ -121,7 +124,7 @@ uint8_t network_layer_data_frame_send(uint8_t* data, uint8_t length, uint8_t to_
             /***********************/
         }else{
             /* 分帧 */
-            network_layer_send_state = sending_single_data_frame;
+            network_layer_send_state = sending_multiple_data_frame;
             split_frame_to_sub_frame_data_table(data, length, to_mac_address);
         }
     }else{
@@ -301,17 +304,18 @@ uint8_t copy_data_to_receive_frame(uint8_t* data){
     switch (data[0])
     {
         case data_frame: {
-                network_layer_data_frame_t *network_layer_data_frame = (network_layer_data_frame_t *) data;
-                network_layer_receive_data_frame.frame_type = network_layer_data_frame->frame_type;
-                network_layer_receive_data_frame.message_number = network_layer_data_frame->message_number;
-                network_layer_receive_data_frame.message_counter = network_layer_data_frame->message_counter;
-                network_layer_receive_data_frame.from_mac_address = network_layer_data_frame->from_mac_address;
-                network_layer_receive_data_frame.to_mac_address = network_layer_data_frame->to_mac_address;
-                for (uint8_t i = 0; i < network_layer_data_frame->data_length; i++) {
-                    receive_data_buffer[i] = network_layer_data_frame->data[i];
+                network_layer_receive_data_frame.frame_type = data[0];
+                network_layer_receive_data_frame.message_number = data[1];
+                network_layer_receive_data_frame.message_counter = data[2];
+                network_layer_receive_data_frame.from_mac_address = data[3];
+                network_layer_receive_data_frame.to_mac_address = data[4];
+                network_layer_receive_data_frame.data_length = data[5];
+                for (uint8_t i = 0; i < network_layer_receive_data_frame.data_length; i++) {
+//                    receive_data_buffer[i] = network_layer_data_frame->data[i];
+                    receive_data_buffer[i] = data[6 + i];
                 }
                 /* 状态机 */
-                if (network_layer_data_frame->message_number == 1) {
+                if (network_layer_receive_data_frame.message_number == 1) {
                     network_layer_receive_state = received_single_data_frame;
                 } else {
                     network_layer_receive_state = received_multiple_data_frame;
@@ -320,10 +324,9 @@ uint8_t copy_data_to_receive_frame(uint8_t* data){
             }
             break;
         case data_ack_frame: {
-                network_layer_data_ack_frame_t *network_layer_data_ack_frame = (network_layer_data_ack_frame_t *) data;
-                network_layer_receive_data_ack_frame.frame_type = network_layer_data_ack_frame->frame_type;
-                network_layer_receive_data_ack_frame.from_mac_address = network_layer_data_ack_frame->from_mac_address;
-                network_layer_receive_data_ack_frame.to_mac_address = network_layer_data_ack_frame->to_mac_address;
+                network_layer_receive_data_ack_frame.frame_type = data[0];
+                network_layer_receive_data_ack_frame.from_mac_address = data[1];
+                network_layer_receive_data_ack_frame.to_mac_address = data[2];
                 /* 状态机 */
                 network_layer_receive_state = received_data_ack_frame;
                 /* ***** */
@@ -508,11 +511,9 @@ void network_layer_ack_timer_management(void){
         waiting_ack_frame_timer_counter--;
         if(waiting_ack_frame_timer_counter == 0){
             waiting_ack_frame_timer_timeout = 1;
-        }else{
-            waiting_ack_frame_timer_timeout = 0;
+            waiting_ack_frame_timer_start = 0;
         }
     }else{
-        waiting_ack_frame_timer_timeout = 0;
         waiting_ack_frame_timer_counter = 10;
     }
 }
@@ -526,36 +527,41 @@ void network_layer_main_function(void){
         /* 处理接收 */
         switch(network_layer_receive_state){
             case received_single_data_frame:
-                if(network_layer_receive_data_frame.to_mac_address != Current_MAC_Address){
-                    /* 处理转发逻辑 */
-                    uint8_t stack_serach_result;
-                    forwarding_table_t forwarding_table_data;
-                    forwarding_table_data.from_mac_address = network_layer_receive_data_frame.from_mac_address;
-                    forwarding_table_data.to_mac_address = network_layer_receive_data_frame.to_mac_address;
-                    forwarding_table_data.time_counter = Network_Layer_Data_Frame_Forwarding_Element_Max_Time_Counter;//不参与搜索比较
-                    forwarding_table_data.crc_8 = crc_8((uint8_t*)network_layer_receive_data_frame.data, 
-                                                         network_layer_receive_data_frame.data_length);
-                    stack_serach_result = data_frame_forwarding_table_stack.serach(&data_frame_forwarding_table_stack,
-                                                                                    (uint8_t*)&forwarding_table_data);
-                    if(stack_serach_result == data_frame_forwarding_table_stack.stack_top_index){
-                        /* 没有搜索到，push进表，并转发 */
-                        data_frame_forwarding_table_stack.push(&data_frame_forwarding_table_stack,
-                                                                (uint8_t*)&forwarding_table_data);//push进表
-                        network_layer_data_frame_send_single_frame_forwarding(&network_layer_receive_data_frame);//转发报文
-                    }else{
-                        /* 不做处理，丢弃该报文 */
-                    }
-                    /* *********** */
-                }else{
-                    /* 确认为本机接收报文 */
-                    network_layer_receive_data.from_mac_address = network_layer_receive_data_frame.from_mac_address;
-                    network_layer_receive_data.data = network_layer_receive_data_frame.data;
-                    network_layer_receive_data.length = network_layer_receive_data_frame.data_length;
-                    //发送ACK报文
-                    network_layer_data_ack_frame_send();
-                    /* TODO:调用上层CallBack */
+                if(network_layer_receive_data_frame.from_mac_address != Current_MAC_Address) {/*当收到自己发出去的报文被转发回时丢弃*/
+                    if (network_layer_receive_data_frame.to_mac_address != Current_MAC_Address) {
+                        /* 处理转发逻辑 */
+                        uint8_t stack_search_result;
+                        forwarding_table_t forwarding_table_data;
+                        forwarding_table_data.from_mac_address = network_layer_receive_data_frame.from_mac_address;
+                        forwarding_table_data.to_mac_address = network_layer_receive_data_frame.to_mac_address;
+                        forwarding_table_data.time_counter = Network_Layer_Data_Frame_Forwarding_Element_Max_Time_Counter;//不参与搜索比较
+                        forwarding_table_data.crc_8 = crc_8((uint8_t *) network_layer_receive_data_frame.data,
+                                                            network_layer_receive_data_frame.data_length);
+                        stack_search_result = data_frame_forwarding_table_stack.search(
+                                &data_frame_forwarding_table_stack,
+                                (uint8_t *) &forwarding_table_data);
+                        if (stack_search_result == data_frame_forwarding_table_stack.stack_top_index) {
+                            /* 没有搜索到，push进表，并转发 */
+                            data_frame_forwarding_table_stack.push(&data_frame_forwarding_table_stack,
+                                                                   (uint8_t *) &forwarding_table_data);//push进表
+                            network_layer_data_frame_send_single_frame_forwarding(
+                                    &network_layer_receive_data_frame);//转发报文
+                        } else {
+                            /* 不做处理，丢弃该报文 */
+                        }
+                        /* *********** */
+                    } else {
+                        /* 确认为本机接收报文 */
+                        network_layer_receive_data.from_mac_address = network_layer_receive_data_frame.from_mac_address;
+                        network_layer_receive_data.data = network_layer_receive_data_frame.data;
+                        network_layer_receive_data.length = network_layer_receive_data_frame.data_length;
+                        //异步发送ACK报文
+//                        network_layer_data_ack_frame_send();
+                        network_layer_send_state = sending_data_ack_frame;
+                        /* TODO:调用上层CallBack */
 
-                    /* **************** */
+                        /* **************** */
+                    }
                 }
 
                 network_layer_receive_state = received_idle;
@@ -564,35 +570,39 @@ void network_layer_main_function(void){
                 network_layer_receive_state = received_idle;
                 break;
             case received_data_ack_frame:
-                if(network_layer_receive_data_ack_frame.to_mac_address != Current_MAC_Address){
-                    /* 处理转发逻辑 */
-                    uint8_t stack_serach_result;
-                    forwarding_table_t forwarding_table_data;
-                    forwarding_table_data.from_mac_address = network_layer_receive_data_ack_frame.from_mac_address;
-                    forwarding_table_data.to_mac_address = network_layer_receive_data_ack_frame.to_mac_address;
-                    forwarding_table_data.time_counter = Network_Layer_Data_Ack_Frame_Forwarding_Table_Max_Time_Counter;//不参与搜索比较
-                    forwarding_table_data.crc_8 = 0;
-                    stack_serach_result = data_ack_frame_forwarding_table_stack.serach(&data_ack_frame_forwarding_table_stack,
-                                                                                    (uint8_t*)&forwarding_table_data);
-                    if(stack_serach_result == data_ack_frame_forwarding_table_stack.stack_top_index){
-                        /* 没有搜索到，push进表，并转发 */
-                        data_ack_frame_forwarding_table_stack.push(&data_ack_frame_forwarding_table_stack,
-                                                                (uint8_t*)&forwarding_table_data);//push进表
-                        network_layer_data_frame_send_single_frame_forwarding((network_layer_data_frame_t*)&network_layer_receive_data_ack_frame);//转发报文
-                    }else{
-                        /* 不做处理，丢弃该报文 */
+                if(network_layer_receive_data_frame.from_mac_address != Current_MAC_Address) {/*当收到自己发出去的报文被转发回时丢弃*/
+                    if (network_layer_receive_data_ack_frame.to_mac_address != Current_MAC_Address) {
+                        /* 处理转发逻辑 */
+                        uint8_t stack_search_result;
+                        forwarding_table_t forwarding_table_data;
+                        forwarding_table_data.from_mac_address = network_layer_receive_data_ack_frame.from_mac_address;
+                        forwarding_table_data.to_mac_address = network_layer_receive_data_ack_frame.to_mac_address;
+                        forwarding_table_data.time_counter = Network_Layer_Data_Ack_Frame_Forwarding_Table_Max_Time_Counter;//不参与搜索比较
+                        forwarding_table_data.crc_8 = 0;
+                        stack_search_result = data_ack_frame_forwarding_table_stack.search(
+                                &data_ack_frame_forwarding_table_stack,
+                                (uint8_t *) &forwarding_table_data);
+                        if (stack_search_result == data_ack_frame_forwarding_table_stack.stack_top_index) {
+                            /* 没有搜索到，push进表，并转发 */
+                            data_ack_frame_forwarding_table_stack.push(&data_ack_frame_forwarding_table_stack,
+                                                                       (uint8_t *) &forwarding_table_data);//push进表
+                            network_layer_data_frame_send_single_frame_forwarding(
+                                    (network_layer_data_frame_t *) &network_layer_receive_data_ack_frame);//转发报文
+                        } else {
+                            /* 不做处理，丢弃该报文 */
+                        }
+                        /* *********** */
+                    } else {
+                        /* 确认为本机接收报文 */
+                        if (network_layer_send_state == waiting_single_data_ack_frame) {
+                            network_layer_send_state = received_idle;
+                        } else if (network_layer_send_state == waiting_multiple_data_ack_frame) {
+                            network_layer_send_state = sending_multiple_data_frame;/* 通知继续发送多帧 */
+                        }
+                        waiting_ack_frame_timer_start = 0;//关闭ACK超时定时器
+                        /* TODO:调用上层CallBack */
+                        /* **************** */
                     }
-                    /* *********** */
-                }else{
-                    /* 确认为本机接收报文 */
-                    if(network_layer_send_state == waiting_single_data_ack_frame){
-                        network_layer_send_state = received_idle;
-                    }else if(network_layer_send_state == waiting_multiple_data_ack_frame){
-                        network_layer_send_state = sending_multiple_data_frame;/* 通知继续发送多帧 */
-                    }
-                    waiting_ack_frame_timer_start = 0;//关闭ACK超时定时器
-                    /* TODO:调用上层CallBack */
-                    /* **************** */
                 }
                 network_layer_receive_state = received_idle;
                 break;
@@ -663,6 +673,8 @@ void network_layer_main_function(void){
                 }
                 break;
             case sending_data_ack_frame:
+                network_layer_data_ack_frame_send();
+                network_layer_send_state = sending_idle;
                 break;
             case sending_retransmission_frame:
                 break;
@@ -670,8 +682,12 @@ void network_layer_main_function(void){
                 break;
             case sending_location_ack_frame:
                 break;
-            case waiting_single_data_ack_frame:
-                /* code */
+            case waiting_single_data_ack_frame:{
+                    if(waiting_ack_frame_timer_timeout == 1){
+                        network_layer_send_state = sending_idle;
+                        waiting_ack_frame_timer_timeout = 0;
+                    }
+                }
                 break;
             case waiting_multiple_data_ack_frame:
                 break;

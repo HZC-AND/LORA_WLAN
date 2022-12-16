@@ -11,6 +11,7 @@
 
 #include "SX1278.h"
 #include <string.h>
+#include "data_link_layer.h"
 
 uint8_t SX1278_SPIRead(SX1278_t *module, uint8_t addr)
 {
@@ -396,12 +397,15 @@ uint8_t SX1278_RX_Once(SX1278_t *module, uint8_t length, uint32_t timeout){
         SX1278_SPIBurstRead(module, 0x00, module->rxBuffer, packet_size);
         module->readBytes = packet_size;
         SX1278_clearLoRaIrq(module);
+
+        data_link_layer_receive_callback(&module->rxBuffer[0], packet_size);
     }
 
     // SX1278_standby(module); // Entry standby mode
 //    SX1278_sleep();//进入睡眠模式
 
-    return module->readBytes;
+//    return module->readBytes;
+    return 1;
 }
 
 /* 只发送一次 */

@@ -18,13 +18,13 @@
 
 #include "algorithm_lib.h"
 
-// extern SX1278_t SX1278_Module;
-SX1278_t SX1278_Module;
+extern SX1278_t SX1278;
 
 data_link_layer_frame_t data_link_layer_frame;
 data_link_layer_frame_t data_link_layer_frame_receive;//接收的数据
 
 uint8_t data_send_buffer_for_sx1278[255];
+uint8_t network_layer_frame_receive[255];
 
 void data_link_layer_init(){
     // data_link_layer_frame.function.conmunication_mode = Communication_Mode;//点播
@@ -82,17 +82,17 @@ uint8_t data_link_layer_send(uint8_t* data){
     /**********/
     data_send_buffer_for_sx1278[data_length - 1] = (uint8_t)(data_link_layer_frame.CRC_8);
     /********************/
-    
 
-    SX1278_Module.frequency = channel_selection_table[data_link_layer_frame.function.channel_selection];
 
-    SX1278_TX_Once(&SX1278_Module,&data_send_buffer_for_sx1278[0],data_length,200);
+    SX1278.frequency = channel_selection_table[data_link_layer_frame.function.channel_selection];
+
+    SX1278_TX_Once(&SX1278,&data_send_buffer_for_sx1278[0],data_length,200);
 
     return 1;
 }
 
 uint8_t data_link_layer_receive_callback(uint8_t* data, uint8_t length){
-    uint8_t network_layer_frame_receive[255];
+//    uint8_t network_layer_frame_receive[255];
     /* 将数据取出 */
     if(data[2] != (length - 4)){
         //接收数据长度不正确

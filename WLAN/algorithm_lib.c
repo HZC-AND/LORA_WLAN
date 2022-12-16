@@ -132,7 +132,7 @@ uint8_t stack_create(struct stack* new_stack, uint8_t* data, uint8_t stack_lengt
     new_stack->pop = stack_pop;
     new_stack->delete = stack_delete;
     new_stack->clear = stack_clear;
-    new_stack->serach = stack_search;
+    new_stack->search = stack_search;
     new_stack->data = data;
 
     return 1;
