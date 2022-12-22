@@ -41,7 +41,7 @@ typedef enum{
     sending_retransmission_frame,
     sending_location_frame,
     sending_location_ack_frame,
-    forwarding_frame,            //正在转发报文
+    sending_forwarding_frame,            //正在转发报文
     waiting_single_data_ack_frame,      //正在等待单帧ACK
     waiting_multiple_data_ack_frame,      //正在等待多帧ACK
 }network_layer_send_state_enum;

@@ -1013,7 +1013,17 @@ void SX1278_sleep(SX1278_t *module);
 
 uint8_t SX1278_RX_Once(SX1278_t *module, uint8_t length, uint32_t timeout);
 uint8_t SX1278_TX_Once(SX1278_t *module, uint8_t *txBuffer, uint8_t length, uint32_t timeout);
-void SX1278_CAD_Mode(SX1278_t *module);
-void SX1278_CAD_Detect(SX1278_t *module);
+void SX1278_H_Sleep_Mode(SX1278_t *module);
+void SX1278_H_Standby_Mode(SX1278_t *module);
+void SX1278_H_Enter_Lora(SX1278_t *module);
+void SX1278_H_CAD_Mode(SX1278_t *module);
+void SX1278_H_CAD_Detect(SX1278_t *module);
+void SX1278_H_Clear_Irq(SX1278_t *module);
+void SX1278_H_Config(SX1278_t *module);
+uint8_t SX1278_H_Enter_TX(SX1278_t *module,uint8_t length);
+uint8_t SX1278_H_Enter_RX(SX1278_t *module,uint8_t length);
+void SX1278_H_Init(SX1278_t *module, uint64_t frequency, uint8_t power,
+                        uint8_t LoRa_SF, uint8_t LoRa_BW, uint8_t LoRa_CR,
+                        uint8_t LoRa_CRC_sum, uint8_t packetLength);
 
 #endif

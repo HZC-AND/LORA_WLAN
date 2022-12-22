@@ -586,8 +586,10 @@ void network_layer_main_function(void){
                             /* 没有搜索到，push进表，并转发 */
                             data_ack_frame_forwarding_table_stack.push(&data_ack_frame_forwarding_table_stack,
                                                                        (uint8_t *) &forwarding_table_data);//push进表
+                            network_layer_send_state = sending_forwarding_frame;
                             network_layer_data_frame_send_single_frame_forwarding(
                                     (network_layer_data_frame_t *) &network_layer_receive_data_ack_frame);//转发报文
+                            network_layer_send_state = sending_idle;
                         } else {
                             /* 不做处理，丢弃该报文 */
                         }
