@@ -121,7 +121,7 @@ uint8_t data_link_layer_receive_callback(uint8_t* data, uint8_t length){
         case 0b01: //组播；
             receive_data_communication_mode = multicast;
             break;
-        case 0b11: //广播
+        case 0b10: //广播
             receive_data_communication_mode = broadcast;
             break;
         default:

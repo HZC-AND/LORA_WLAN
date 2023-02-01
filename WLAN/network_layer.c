@@ -412,6 +412,10 @@ network_layer_send_state_enum get_network_layer_send_state(void){
     return network_layer_send_state;
 }
 
+network_layer_receive_state_enum get_network_layer_receive_state(void){
+    return network_layer_receive_state;
+}
+
 static uint8_t network_layer_data_frame_send_single_frame(void){
     uint8_t result = 0;
 
@@ -557,7 +561,9 @@ void network_layer_main_function(void){
                         network_layer_receive_data.length = network_layer_receive_data_frame.data_length;
                         //异步发送ACK报文
 //                        network_layer_data_ack_frame_send();
-                        network_layer_send_state = sending_data_ack_frame;
+                        if(receive_data_communication_mode != broadcast){
+                            network_layer_send_state = sending_data_ack_frame;
+                        }
                         /* TODO:调用上层CallBack */
 
                         /* **************** */

@@ -9,6 +9,8 @@
  * 
  */
 
+/* TODO:1.尽可能不使用hw_delay 2.发送成功使用中断反馈 */
+
 #include "SX1278.h"
 #include <string.h>
 #include "data_link_layer.h"
@@ -441,7 +443,7 @@ uint8_t SX1278_TX_Once(SX1278_t *module, uint8_t *txBuffer, uint8_t length, uint
             SX1278_hw_Reset(module->hw);
             SX1278_config(module);
             return 0;
-        }
+         }
     }
 
     SX1278_SPIBurstWrite(module, 0x00, txBuffer, length);//将数据写入FIFO
