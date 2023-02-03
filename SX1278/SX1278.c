@@ -15,6 +15,8 @@
 #include <string.h>
 #include "data_link_layer.h"
 
+extern SX1278_t SX1278;
+
 uint8_t SX1278_SPIRead(SX1278_t *module, uint8_t addr)
 {
     uint8_t tmp;
@@ -588,7 +590,7 @@ uint8_t SX1278_H_Enter_TX(SX1278_t *module,uint8_t length){
 
     module->packetLength = length;
 
-//    SX1278_H_Config(module);/*TODO:不调用这个函数，看看能否正常运行*/
+    //SX1278_H_Config(module);/*TODO:不调用这个函数，看看能否正常运行*/
 
     SX1278_SPIWrite(module, REG_LR_PADAC, 0x87);       // Tx for 20dBm
     SX1278_SPIWrite(module, LR_RegHopPeriod, 0x00);    // RegHopPeriod NO FHSS
@@ -597,7 +599,7 @@ uint8_t SX1278_H_Enter_TX(SX1278_t *module,uint8_t length){
      *   DIO3          DIO2           DIO1       DIO0
      * CadDone FhssChangeChannel  RxTimeout    TxDone
      */
-    SX1278_SPIWrite(module, REG_LR_DIOMAPPING1, 0x01); // DIO0=00, DIO1=00,DIO2=00, DIO3=01
+    SX1278_SPIWrite(module, REG_LR_DIOMAPPING1, 0x40); // DIO0=01, DIO1=00,DIO2=00, DIO3=00
     SX1278_H_Clear_Irq(module);
     SX1278_SPIWrite(module, LR_RegIrqFlagsMask, 0xF7);    // Open TxDone interrupt
     SX1278_SPIWrite(module, LR_RegPayloadLength, length); // RegPayloadLength
@@ -611,6 +613,7 @@ uint8_t SX1278_H_Enter_TX(SX1278_t *module,uint8_t length){
     if(temp != length){
         return 0;
     }else{
+        module->status = TX;
         /*Do nothing*/
     }
 
@@ -657,6 +660,20 @@ uint8_t SX1278_H_Enter_RX(SX1278_t *module,uint8_t length){
 //        }
 //        //		SX1278_hw_DelayMs(1);
 //    }
+}
+
+SX1278_Running_Status_t SX1278_H_Get_Running_Status(void){
+    return SX1278.Running_Status;
+}
+
+uint8_t SX1278_H_TX_Once(SX1278_t *module, uint8_t *txBuffer, uint8_t length, uint32_t timeout){
+    SX1278_H_Enter_TX(module,length);
+    SX1278_SPIBurstWrite(module, 0x00, txBuffer, length);//将数据写入FIFO
+    SX1278_SPIWrite(module, LR_RegOpMode, 0x8b); //设置 Tx Mode
+
+    module->Running_Status = SX1278_RUNNING_TX_PENDING;//TODO:需要有pending状态的超时管理
+
+    return 1;//上层设置pending//TODO:TIP=>tx done中断设置sx1278待机状态
 }
 
 void SX1278_H_Init(SX1278_t *module, uint64_t frequency, uint8_t power,

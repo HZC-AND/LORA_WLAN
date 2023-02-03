@@ -86,9 +86,10 @@ uint8_t data_link_layer_send(uint8_t* data){
 
     SX1278.frequency = channel_selection_table[data_link_layer_frame.function.channel_selection];
 
-    SX1278_TX_Once(&SX1278,&data_send_buffer_for_sx1278[0],data_length,200);
+    //SX1278_TX_Once(&SX1278,&data_send_buffer_for_sx1278[0],data_length,200);//HZC Modified in 2023-2-2
+    uint8_t result = SX1278_H_TX_Once(&SX1278,&data_send_buffer_for_sx1278[0],data_length,200);
 
-    return 1;
+    return result;
 }
 
 uint8_t data_link_layer_receive_callback(uint8_t* data, uint8_t length){

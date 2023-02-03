@@ -44,6 +44,7 @@ typedef enum{
     sending_forwarding_frame,            //正在转发报文
     waiting_single_data_ack_frame,      //正在等待单帧ACK
     waiting_multiple_data_ack_frame,      //正在等待多帧ACK
+    sending_frame_pending,//发送pending //TODO:因此需要添加pending超时机制
 }network_layer_send_state_enum;
 
 /* 网络层数据接收状态 */

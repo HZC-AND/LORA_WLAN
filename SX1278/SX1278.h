@@ -739,6 +739,10 @@ typedef enum _SX1278_STATUS {
 	SLEEP, STANDBY, TX, RX, CAD
 } SX1278_Status_t;
 
+typedef enum _SX1278_RUNNING_STATUS{
+    SX1278_RUNNING_IDLE,SX1278_RUNNING_TX_PENDING,SX1278_RUNNING_RX_PENDING
+}SX1278_Running_Status_t;
+
 typedef struct {
 	SX1278_hw_t *hw;
 
@@ -751,6 +755,8 @@ typedef struct {
 	uint8_t packetLength;
 
 	SX1278_Status_t status;
+
+    SX1278_Running_Status_t Running_Status;
 
 	uint8_t rxBuffer[SX1278_MAX_PACKET];
 	uint8_t readBytes;
@@ -1022,6 +1028,8 @@ void SX1278_H_Clear_Irq(SX1278_t *module);
 void SX1278_H_Config(SX1278_t *module);
 uint8_t SX1278_H_Enter_TX(SX1278_t *module,uint8_t length);
 uint8_t SX1278_H_Enter_RX(SX1278_t *module,uint8_t length);
+SX1278_Running_Status_t SX1278_H_Get_Running_Status(void);
+uint8_t SX1278_H_TX_Once(SX1278_t *module, uint8_t *txBuffer, uint8_t length, uint32_t timeout);
 void SX1278_H_Init(SX1278_t *module, uint64_t frequency, uint8_t power,
                         uint8_t LoRa_SF, uint8_t LoRa_BW, uint8_t LoRa_CR,
                         uint8_t LoRa_CRC_sum, uint8_t packetLength);
