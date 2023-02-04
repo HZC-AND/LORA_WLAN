@@ -636,30 +636,31 @@ uint8_t SX1278_H_Enter_RX(SX1278_t *module,uint8_t length){
      */
     SX1278_SPIWrite(module, REG_LR_DIOMAPPING1, 0x00);
 
-//    SX1278_SPIWrite(module, LR_RegIrqFlagsMask, 0x3F); // Open RxDone interrupt & Timeout
-//    SX1278_clearLoRaIrq(module);
-//    SX1278_SPIWrite(module, LR_RegPayloadLength, length); // Payload Length 21byte(this register must difine when the data long of one byte in SF is 6)
-//    addr = SX1278_SPIRead(module, LR_RegFifoRxBaseAddr);  // Read RxBaseAddr
-//    SX1278_SPIWrite(module, LR_RegFifoAddrPtr, addr);     // RxBaseAddr->FiFoAddrPtr
-//    SX1278_SPIWrite(module, LR_RegOpMode, 0x8d);          // Mode//Low Frequency Mode
-//    // SX1278_SPIWrite(module, LR_RegOpMode,0x05);	//Continuous Rx Mode //High Frequency Mode
-//    module->readBytes = 0;
-//
-//    while (1)
-//    {
-//        if ((SX1278_SPIRead(module, LR_RegModemStat) & 0x04) == 0x04)
-//        { // Rx-on going RegModemStat
-//            module->status = RX;
-//            return 1;
-//        }
-//        if (--timeout == 0)
-//        {
-//            SX1278_hw_Reset(module->hw);
-//            SX1278_config(module);
-//            return 0;
-//        }
-//        //		SX1278_hw_DelayMs(1);
-//    }
+    SX1278_SPIWrite(module, LR_RegIrqFlagsMask, 0x3F); // Open RxDone interrupt & Timeout
+    SX1278_clearLoRaIrq(module);
+    SX1278_SPIWrite(module, LR_RegPayloadLength, length); // Payload Length 21byte(this register must difine when the data long of one byte in SF is 6)
+    addr = SX1278_SPIRead(module, LR_RegFifoRxBaseAddr);  // Read RxBaseAddr
+    SX1278_SPIWrite(module, LR_RegFifoAddrPtr, addr);     // RxBaseAddr->FiFoAddrPtr
+    SX1278_SPIWrite(module, LR_RegOpMode, 0x8d);          // Mode//Low Frequency Mode
+    SX1278_SPIWrite(module, LR_RegOpMode,0x05);	//Continuous Rx Mode //High Frequency Mode
+    module->readBytes = 0;
+
+    uint8_t timeout = 200;
+    while (1)
+    {
+        if ((SX1278_SPIRead(module, LR_RegModemStat) & 0x04) == 0x04)
+        { // Rx-on going RegModemStat
+            module->status = RX;
+            return 1;
+        }
+        if (--timeout == 0)
+        {
+            SX1278_hw_Reset(module->hw);
+            SX1278_config(module);
+            return 0;
+        }
+        //		SX1278_hw_DelayMs(1);
+    }
 }
 
 SX1278_Running_Status_t SX1278_H_Get_Running_Status(void){
@@ -674,6 +675,43 @@ uint8_t SX1278_H_TX_Once(SX1278_t *module, uint8_t *txBuffer, uint8_t length, ui
     module->Running_Status = SX1278_RUNNING_TX_PENDING;//TODO:需要有pending状态的超时管理
 
     return 1;//上层设置pending//TODO:TIP=>tx done中断设置sx1278待机状态
+}
+
+uint8_t SX1278_H_RX_Once(SX1278_t *module, uint8_t length, uint32_t timeout){
+    if(module->Running_Status == SX1278_RUNNING_IDLE) {
+        SX1278_H_Enter_RX(module, length);
+
+        module->Running_Status = SX1278_RUNNING_RX_PENDING;
+    }else if(module->Running_Status == SX1278_RUNNING_RX_DONE){
+        uint8_t addr;
+        uint8_t packet_size;
+
+        memset(module->rxBuffer, 0x00, SX1278_MAX_PACKET);
+
+        addr = SX1278_SPIRead(module, LR_RegFifoRxCurrentaddr); // last packet addr
+        SX1278_SPIWrite(module, LR_RegFifoAddrPtr, addr);       // RxBaseAddr -> FiFoAddrPtr
+
+        if (module->LoRa_SF == SX1278_LORA_SF_6)
+        { // When SpreadFactor is six,will used Implicit Header mode(Excluding internal packet length)
+            packet_size = module->packetLength;
+        }
+        else
+        {
+            packet_size = SX1278_SPIRead(module, LR_RegRxNbBytes); // Number for received bytes
+        }
+
+        SX1278_SPIBurstRead(module, 0x00, module->rxBuffer, packet_size);
+        module->readBytes = packet_size;
+        SX1278_clearLoRaIrq(module);
+
+        data_link_layer_receive_callback(&module->rxBuffer[0], packet_size);
+
+        module->Running_Status = SX1278_RUNNING_IDLE;
+    }else{
+        /*Do nothing*/
+    }
+
+    return 1;
 }
 
 void SX1278_H_Init(SX1278_t *module, uint64_t frequency, uint8_t power,
