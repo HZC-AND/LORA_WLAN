@@ -63,6 +63,9 @@ uint8_t data_link_layer_send(uint8_t* data){
         case location_ack_frame:
             data_link_layer_frame.data_length = 4;
             break;
+        case TOF_frame:
+            data_link_layer_frame.data_length = 8;
+            break;
         default:
             break;
     }

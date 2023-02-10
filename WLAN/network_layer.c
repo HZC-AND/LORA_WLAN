@@ -73,12 +73,16 @@ uint8_t waiting_ack_frame_timer_timeout;//等待超时标志
 /* TODO:考虑us级硬件定时器的使用 */
 //TOF发起端
 uint64_t t1, t4, t5;
-TOF_delta_t_t delta_t_3_2_sender_side;
-TOF_delta_t_t delta_t_6_3_serder_side;
+// TOF_delta_t_t delta_t_3_2_sender_side;
+// TOF_delta_t_t delta_t_6_3_serder_side;
+TOF_delta_t_t delta_t_step1;
+TOF_delta_t_t delta_t_step3;
 //TOF接收端
 uint64_t t2, t3, t6;
-TOF_delta_t_t delta_t_3_2_receiver_side;
-TOF_delta_t_t delta_t_6_3_receiver_side;
+// TOF_delta_t_t delta_t_3_2_receiver_side;
+// TOF_delta_t_t delta_t_6_3_receiver_side;
+TOF_delta_t_t delta_t_step2;
+TOF_delta_t_t delta_t_step4;
 /*****************/
 
 /* TOF接收数据报文 */
@@ -185,47 +189,54 @@ uint8_t network_layer_data_ack_frame_send(void) {
  * @param to_mac_address 
  */
 uint8_t network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address) {
+    /* TODO:应设置一个全局变量，以标明当前节点是TOF发送侧(发起定位侧)还是接收侧(被定位侧) */
     uint8_t result = 0;
 
-    network_layer_TOF_frame_t network_layer_TOF_frame;
+    network_layer_TOF_frame_t network_layer_TOF_frame;/* 在该函数周期中，此变量数据会被Copy，所以不需要使用全局变量 */
     network_layer_TOF_frame.frame_type = TOF_frame;
     network_layer_TOF_frame.from_mac_address = Current_MAC_Address;
     network_layer_TOF_frame.to_mac_address = to_mac_address;
     /* TODO:接收或发送的数组是MSB还是LSB需要验证 */
     switch (step) {
         case step1:
-            network_layer_TOF_frame.delta_t[4] = 0;
-            network_layer_TOF_frame.delta_t[3] = 0;
-            network_layer_TOF_frame.delta_t[2] = 0;
-            network_layer_TOF_frame.delta_t[1] = 0;
-            network_layer_TOF_frame.delta_t[0] = 0;
+            network_layer_TOF_frame.delta_t[4] = delta_t_step1.time_ns;
+            network_layer_TOF_frame.delta_t[3] =
+                    (delta_t_step1.time_ns >> 8) | (delta_t_step1.time_us << 2);
+            network_layer_TOF_frame.delta_t[2] =
+                    (delta_t_step1.time_us >> 6) | (delta_t_step1.time_ms << 4);
+            network_layer_TOF_frame.delta_t[1] =
+                    (delta_t_step1.time_ms >> 4) | (delta_t_step1.time_s << 6);
+            network_layer_TOF_frame.delta_t[0] = (delta_t_step1.time_s >> 2) | step;
             break;
         case step2:
-            network_layer_TOF_frame.delta_t[4] = delta_t_3_2_receiver_side.time_ns;
+            network_layer_TOF_frame.delta_t[4] = delta_t_step2.time_ns;
             network_layer_TOF_frame.delta_t[3] =
-                    (delta_t_3_2_receiver_side.time_ns >> 8) | (delta_t_3_2_receiver_side.time_us << 2);
+                    (delta_t_step2.time_ns >> 8) | (delta_t_step2.time_us << 2);
             network_layer_TOF_frame.delta_t[2] =
-                    (delta_t_3_2_receiver_side.time_us >> 6) | (delta_t_3_2_receiver_side.time_ms << 4);
+                    (delta_t_step2.time_us >> 6) | (delta_t_step2.time_ms << 4);
             network_layer_TOF_frame.delta_t[1] =
-                    (delta_t_3_2_receiver_side.time_ms >> 4) | (delta_t_3_2_receiver_side.time_s << 6);
-            network_layer_TOF_frame.delta_t[0] = (delta_t_3_2_receiver_side.time_s >> 2) | step;
+                    (delta_t_step2.time_ms >> 4) | (delta_t_step2.time_s << 6);
+            network_layer_TOF_frame.delta_t[0] = (delta_t_step2.time_s >> 2) | step;
             break;
         case step3:
-            network_layer_TOF_frame.delta_t[4] = 0;
-            network_layer_TOF_frame.delta_t[3] = 0;
-            network_layer_TOF_frame.delta_t[2] = 0;
-            network_layer_TOF_frame.delta_t[1] = 0;
-            network_layer_TOF_frame.delta_t[0] = 0;
+            network_layer_TOF_frame.delta_t[4] = delta_t_step3.time_ns;
+            network_layer_TOF_frame.delta_t[3] =
+                    (delta_t_step3.time_ns >> 8) | (delta_t_step3.time_us << 2);
+            network_layer_TOF_frame.delta_t[2] =
+                    (delta_t_step3.time_us >> 6) | (delta_t_step3.time_ms << 4);
+            network_layer_TOF_frame.delta_t[1] =
+                    (delta_t_step3.time_ms >> 4) | (delta_t_step3.time_s << 6);
+            network_layer_TOF_frame.delta_t[0] = (delta_t_step3.time_s >> 2) | step;
             break;
         case step4:
-            network_layer_TOF_frame.delta_t[4] = delta_t_6_3_receiver_side.time_ns;
+            network_layer_TOF_frame.delta_t[4] = delta_t_step4.time_ns;
             network_layer_TOF_frame.delta_t[3] =
-                    (delta_t_6_3_receiver_side.time_ns >> 8) | (delta_t_6_3_receiver_side.time_us << 2);
+                    (delta_t_step4.time_ns >> 8) | (delta_t_step4.time_us << 2);
             network_layer_TOF_frame.delta_t[2] =
-                    (delta_t_6_3_receiver_side.time_us >> 6) | (delta_t_6_3_receiver_side.time_ms << 4);
+                    (delta_t_step4.time_us >> 6) | (delta_t_step4.time_ms << 4);
             network_layer_TOF_frame.delta_t[1] =
-                    (delta_t_6_3_receiver_side.time_ms >> 4) | (delta_t_6_3_receiver_side.time_s << 6);
-            network_layer_TOF_frame.delta_t[0] = (delta_t_6_3_receiver_side.time_s >> 2) | step;
+                    (delta_t_step4.time_ms >> 4) | (delta_t_step4.time_s << 6);
+            network_layer_TOF_frame.delta_t[0] = (delta_t_step4.time_s >> 2) | step;
             break;
         default:
             break;
@@ -245,18 +256,57 @@ void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TO
     TOF_delta_t.time_s = (network_layer_TOF_frame->delta_t[1] >> 4) | (network_layer_TOF_frame->delta_t[0] & 0xF);
     TOF_delta_t.step = network_layer_TOF_frame->delta_t[0] >> 4;
 
-    if (TOF_delta_t.step == step2) {
-        delta_t_3_2_sender_side.step = TOF_delta_t.step;
-        delta_t_3_2_sender_side.time_ns = TOF_delta_t.time_ns;
-        delta_t_3_2_sender_side.time_us = TOF_delta_t.time_us;
-        delta_t_3_2_sender_side.time_ms = TOF_delta_t.time_ms;
-        delta_t_3_2_sender_side.time_s = TOF_delta_t.time_s;
-    } else if (TOF_delta_t.step == step4) {
-        delta_t_6_3_serder_side.step = TOF_delta_t.step;
-        delta_t_6_3_serder_side.time_ns = TOF_delta_t.time_ns;
-        delta_t_6_3_serder_side.time_us = TOF_delta_t.time_us;
-        delta_t_6_3_serder_side.time_ms = TOF_delta_t.time_ms;
-        delta_t_6_3_serder_side.time_s = TOF_delta_t.time_s;
+    // if (TOF_delta_t.step == step2) {
+    //     delta_t_3_2_sender_side.step = TOF_delta_t.step;
+    //     delta_t_3_2_sender_side.time_ns = TOF_delta_t.time_ns;
+    //     delta_t_3_2_sender_side.time_us = TOF_delta_t.time_us;
+    //     delta_t_3_2_sender_side.time_ms = TOF_delta_t.time_ms;
+    //     delta_t_3_2_sender_side.time_s = TOF_delta_t.time_s;
+    // } else if (TOF_delta_t.step == step4) {
+    //     delta_t_6_3_serder_side.step = TOF_delta_t.step;
+    //     delta_t_6_3_serder_side.time_ns = TOF_delta_t.time_ns;
+    //     delta_t_6_3_serder_side.time_us = TOF_delta_t.time_us;
+    //     delta_t_6_3_serder_side.time_ms = TOF_delta_t.time_ms;
+    //     delta_t_6_3_serder_side.time_s = TOF_delta_t.time_s;
+    // }
+    switch (TOF_delta_t.step)
+    {
+        case step1:
+            /* step1接收侧保存发送侧数据 */
+            delta_t_step1.step = TOF_delta_t.step;
+            delta_t_step1.time_ns = TOF_delta_t.time_ns;
+            delta_t_step1.time_us = TOF_delta_t.time_us;
+            delta_t_step1.time_ms = TOF_delta_t.time_ms;
+            delta_t_step1.time_s = TOF_delta_t.time_s;
+            /* TODO:step1接收侧更新时间，更新delta_t_step2，并请求发送 */
+            break;
+        case step2:
+            delta_t_step2.step = TOF_delta_t.step;
+            delta_t_step2.time_ns = TOF_delta_t.time_ns;
+            delta_t_step2.time_us = TOF_delta_t.time_us;
+            delta_t_step2.time_ms = TOF_delta_t.time_ms;
+            delta_t_step2.time_s = TOF_delta_t.time_s;
+            /* TODO:step2接收侧更新时间，更新delta_t_step3，并请求发送 */
+            break;
+        case step3:
+            delta_t_step3.step = TOF_delta_t.step;
+            delta_t_step3.time_ns = TOF_delta_t.time_ns;
+            delta_t_step3.time_us = TOF_delta_t.time_us;
+            delta_t_step3.time_ms = TOF_delta_t.time_ms;
+            delta_t_step3.time_s = TOF_delta_t.time_s;
+            /* TODO:step3接收侧更新时间，更新delta_t_step4，并请求发送 */
+            break;
+        case step4:
+            /* TODO:定位发起侧接收最后TOF报文 */
+            delta_t_step4.step = TOF_delta_t.step;
+            delta_t_step4.time_ns = TOF_delta_t.time_ns;
+            delta_t_step4.time_us = TOF_delta_t.time_us;
+            delta_t_step4.time_ms = TOF_delta_t.time_ms;
+            delta_t_step4.time_s = TOF_delta_t.time_s;
+            break;
+        
+        default:
+            break;
     }
 
 }
