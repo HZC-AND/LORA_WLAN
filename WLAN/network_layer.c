@@ -496,8 +496,7 @@ static uint8_t network_layer_data_frame_send_single_frame(void) {
     return result;
 }
 
-static uint8_t
-network_layer_data_frame_send_single_frame_forwarding(network_layer_data_frame_t *network_layer_data_frame) {
+static uint8_t network_layer_data_frame_send_single_frame_forwarding(network_layer_data_frame_t *network_layer_data_frame) {
     uint8_t result = 0;
 
     /*copy数据至buffer*/
