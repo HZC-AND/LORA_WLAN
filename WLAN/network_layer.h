@@ -59,6 +59,11 @@ typedef enum{
     received_TOF_frame,
 }network_layer_receive_state_enum;
 
+typedef enum {
+    master_side,
+    slave_side
+}network_layer_TOF_side_enum;
+
 /* 需要接收ACK的信息 */
 // typedef struct {
 

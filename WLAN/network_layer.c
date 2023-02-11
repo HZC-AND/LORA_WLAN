@@ -70,7 +70,9 @@ uint8_t waiting_ack_frame_timer_timeout;//等待超时标志
 /* *********** */
 
 /* TOF相关时间变量 */
-/* TODO:考虑us级硬件定时器的使用 */
+/* TODO:考虑us级硬件定时器的使用
+ * TODO:TIM2=>us定时器 htim2.Instance.CNT保存计数器值
+ * TODO:TIM1=>ms定时器 htim1.Instance.CNT保存计数器值 */
 //TOF发起端
 uint64_t t1, t4, t5;
 // TOF_delta_t_t delta_t_3_2_sender_side;
@@ -256,19 +258,6 @@ void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TO
     TOF_delta_t.time_s = (network_layer_TOF_frame->delta_t[1] >> 4) | (network_layer_TOF_frame->delta_t[0] & 0xF);
     TOF_delta_t.step = network_layer_TOF_frame->delta_t[0] >> 4;
 
-    // if (TOF_delta_t.step == step2) {
-    //     delta_t_3_2_sender_side.step = TOF_delta_t.step;
-    //     delta_t_3_2_sender_side.time_ns = TOF_delta_t.time_ns;
-    //     delta_t_3_2_sender_side.time_us = TOF_delta_t.time_us;
-    //     delta_t_3_2_sender_side.time_ms = TOF_delta_t.time_ms;
-    //     delta_t_3_2_sender_side.time_s = TOF_delta_t.time_s;
-    // } else if (TOF_delta_t.step == step4) {
-    //     delta_t_6_3_serder_side.step = TOF_delta_t.step;
-    //     delta_t_6_3_serder_side.time_ns = TOF_delta_t.time_ns;
-    //     delta_t_6_3_serder_side.time_us = TOF_delta_t.time_us;
-    //     delta_t_6_3_serder_side.time_ms = TOF_delta_t.time_ms;
-    //     delta_t_6_3_serder_side.time_s = TOF_delta_t.time_s;
-    // }
     switch (TOF_delta_t.step)
     {
         case step1:
