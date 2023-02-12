@@ -19,6 +19,8 @@
 
 #include "SX1278.h"
 
+#include "tim.h"
+
 /* 路由表 */
 
 /* 定位表 */
@@ -75,16 +77,25 @@ uint8_t waiting_ack_frame_timer_timeout;//等待超时标志
  * TODO:TIM1=>ms定时器 htim1.Instance.CNT保存计数器值 */
 //TOF发起端
 uint64_t t1, t4, t5;
+TOF_delta_t_t delta_t_4_1;
+TOF_delta_t_t delta_t_5_4;
 // TOF_delta_t_t delta_t_3_2_sender_side;
 // TOF_delta_t_t delta_t_6_3_serder_side;
 TOF_delta_t_t delta_t_step1;
 TOF_delta_t_t delta_t_step3;
 //TOF接收端
 uint64_t t2, t3, t6;
+TOF_delta_t_t delta_t_3_2;
+TOF_delta_t_t delta_t_6_3;
 // TOF_delta_t_t delta_t_3_2_receiver_side;
 // TOF_delta_t_t delta_t_6_3_receiver_side;
 TOF_delta_t_t delta_t_step2;
 TOF_delta_t_t delta_t_step4;
+
+uint64_t TOF_result = 0;
+uint64_t TOF_delta_S = 0;
+uint64_t TOF_delta_R = 0;
+uint64_t TOF_clock_offset = 0;
 /*****************/
 
 /* TOF接收数据报文 */
@@ -201,6 +212,8 @@ uint8_t network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address) {
     /* TODO:接收或发送的数组是MSB还是LSB需要验证 */
     switch (step) {
         case step1:
+            HAL_TIM_Base_Start(&htim1);
+            HAL_TIM_Base_Start(&htim2);
             network_layer_TOF_frame.delta_t[4] = delta_t_step1.time_ns;
             network_layer_TOF_frame.delta_t[3] =
                     (delta_t_step1.time_ns >> 8) | (delta_t_step1.time_us << 2);
@@ -211,6 +224,8 @@ uint8_t network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address) {
             network_layer_TOF_frame.delta_t[0] = (delta_t_step1.time_s >> 2) | step;
             break;
         case step2:
+            HAL_TIM_Base_Start(&htim1);
+            HAL_TIM_Base_Start(&htim2);
             network_layer_TOF_frame.delta_t[4] = delta_t_step2.time_ns;
             network_layer_TOF_frame.delta_t[3] =
                     (delta_t_step2.time_ns >> 8) | (delta_t_step2.time_us << 2);
@@ -221,6 +236,8 @@ uint8_t network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address) {
             network_layer_TOF_frame.delta_t[0] = (delta_t_step2.time_s >> 2) | step;
             break;
         case step3:
+//            HAL_TIM_Base_Start(&htim1);
+//            HAL_TIM_Base_Start(&htim2);
             network_layer_TOF_frame.delta_t[4] = delta_t_step3.time_ns;
             network_layer_TOF_frame.delta_t[3] =
                     (delta_t_step3.time_ns >> 8) | (delta_t_step3.time_us << 2);
@@ -262,36 +279,61 @@ void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TO
     {
         case step1:
             /* step1接收侧保存发送侧数据 */
-            delta_t_step1.step = TOF_delta_t.step;
-            delta_t_step1.time_ns = TOF_delta_t.time_ns;
-            delta_t_step1.time_us = TOF_delta_t.time_us;
-            delta_t_step1.time_ms = TOF_delta_t.time_ms;
-            delta_t_step1.time_s = TOF_delta_t.time_s;
-            /* TODO:step1接收侧更新时间，更新delta_t_step2，并请求发送 */
+//            delta_t_step1.step = TOF_delta_t.step;
+//            delta_t_step1.time_ns = TOF_delta_t.time_ns;
+//            delta_t_step1.time_us = TOF_delta_t.time_us;
+//            delta_t_step1.time_ms = TOF_delta_t.time_ms;
+//            delta_t_step1.time_s = TOF_delta_t.time_s;
+            network_layer_TOF_frame_send(step2,network_layer_TOF_frame->from_mac_address);
             break;
         case step2:
-            delta_t_step2.step = TOF_delta_t.step;
-            delta_t_step2.time_ns = TOF_delta_t.time_ns;
-            delta_t_step2.time_us = TOF_delta_t.time_us;
-            delta_t_step2.time_ms = TOF_delta_t.time_ms;
-            delta_t_step2.time_s = TOF_delta_t.time_s;
+//            delta_t_step2.step = TOF_delta_t.step;
+//            delta_t_step2.time_ns = TOF_delta_t.time_ns;
+//            delta_t_step2.time_us = TOF_delta_t.time_us;
+//            delta_t_step2.time_ms = TOF_delta_t.time_ms;
+//            delta_t_step2.time_s = TOF_delta_t.time_s;
             /* TODO:step2接收侧更新时间，更新delta_t_step3，并请求发送 */
+            HAL_TIM_Base_Stop(&htim1);
+            HAL_TIM_Base_Stop(&htim2);
+            delta_t_4_1.time_s = (htim1.Instance->CNT - htim1.Instance->CNT % 1000)/1000;
+            delta_t_4_1.time_ms = htim1.Instance->CNT % 1000;
+            delta_t_4_1.time_us = htim2.Instance->CNT % 1000;
+            delta_t_4_1.time_ns = 0;
+            htim1.Instance->CNT = 0;
+            htim2.Instance->CNT = 0;
+            network_layer_TOF_frame_send(step3,network_layer_TOF_frame->from_mac_address);
             break;
         case step3:
-            delta_t_step3.step = TOF_delta_t.step;
-            delta_t_step3.time_ns = TOF_delta_t.time_ns;
-            delta_t_step3.time_us = TOF_delta_t.time_us;
-            delta_t_step3.time_ms = TOF_delta_t.time_ms;
-            delta_t_step3.time_s = TOF_delta_t.time_s;
             /* TODO:step3接收侧更新时间，更新delta_t_step4，并请求发送 */
+            HAL_TIM_Base_Stop(&htim1);
+            HAL_TIM_Base_Stop(&htim2);
+            delta_t_step4.time_s = (htim1.Instance->CNT - htim1.Instance->CNT % 1000)/1000;
+            delta_t_step4.time_ms = htim1.Instance->CNT % 1000;
+            delta_t_step4.time_us = htim2.Instance->CNT % 1000;
+            delta_t_step4.time_ns = 0;
+            htim1.Instance->CNT = 0;
+            htim2.Instance->CNT = 0;
+            network_layer_TOF_frame_send(step4,network_layer_TOF_frame->from_mac_address);
             break;
         case step4:
             /* TODO:定位发起侧接收最后TOF报文 */
-            delta_t_step4.step = TOF_delta_t.step;
-            delta_t_step4.time_ns = TOF_delta_t.time_ns;
-            delta_t_step4.time_us = TOF_delta_t.time_us;
-            delta_t_step4.time_ms = TOF_delta_t.time_ms;
-            delta_t_step4.time_s = TOF_delta_t.time_s;
+            delta_t_6_3.step = TOF_delta_t.step;
+            delta_t_6_3.time_ns = TOF_delta_t.time_ns;
+            delta_t_6_3.time_us = TOF_delta_t.time_us;
+            delta_t_6_3.time_ms = TOF_delta_t.time_ms;
+            delta_t_6_3.time_s = TOF_delta_t.time_s;
+//            /* 使用memcpy */
+//            delta_t_6_3.time_s = delta_t_step4.time_s;
+//            delta_t_6_3.time_ms = delta_t_step4.time_ms;
+//            delta_t_6_3.time_us = delta_t_step4.time_us;
+//            delta_t_6_3.time_ns = delta_t_step4.time_ns;
+
+            //单位ns
+            TOF_result = ((delta_t_6_3.time_s + delta_t_5_4.time_s)*1000000000 +
+                        (delta_t_6_3.time_ms + delta_t_5_4.time_ms)*1000000 +
+                        (delta_t_6_3.time_us + delta_t_5_4.time_us)*1000 +
+                        (delta_t_6_3.time_ns + delta_t_5_4.time_ns))/4 -
+                                (TOF_delta_S + TOF_delta_R + TOF_clock_offset);
             break;
         
         default:
