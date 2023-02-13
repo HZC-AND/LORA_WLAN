@@ -757,11 +757,11 @@ void network_layer_main_function(void) {
 //                    /* 此次发送失败 */
 //                }
                 if (network_layer_data_frame_send_single_frame()) {
-                    if(SX1278_H_Get_Running_Status() == SX1278_RUNNING_IDLE){
+//                    if(SX1278_H_Get_Running_Status() == SX1278_RUNNING_IDLE){
                         network_layer_send_state = sending_idle;
-                    }else{
-                        network_layer_send_state = sending_frame_pending;
-                    }
+//                    }else{
+//                        network_layer_send_state = sending_frame_pending;
+//                    }
                 }else{
                     /* 此次发送失败 */
                 }
