@@ -706,7 +706,7 @@ uint8_t SX1278_H_RX_Once(SX1278_t *module, uint8_t length, uint32_t timeout){
 
         data_link_layer_receive_callback(&module->rxBuffer[0], packet_size);
 
-        module->Running_Status = SX1278_RUNNING_IDLE;
+//        module->Running_Status = SX1278_RUNNING_IDLE;
     }else{
         /*Do nothing*/
     }

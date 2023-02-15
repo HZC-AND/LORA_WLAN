@@ -101,6 +101,13 @@ uint64_t TOF_clock_offset = 0;
 /* TOF接收数据报文 */
 network_layer_TOF_frame_t network_layer_TOF_frame_received;
 
+extern bool TOF_GLOBAL_LOCK;
+
+//TOF step timer//放入5ms task
+bool TOF_step_timer_start = false;
+TOF_step_enum TOF_step_timer_record_step = step1;
+uint8_t TOF_step_timer_record_to_mac_address = 0;
+uint8_t TOF_step_timer_counter = 200;
 /* ************* */
 
 void network_layer_init(void) {
@@ -209,53 +216,83 @@ uint8_t network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address) {
     network_layer_TOF_frame.frame_type = TOF_frame;
     network_layer_TOF_frame.from_mac_address = Current_MAC_Address;
     network_layer_TOF_frame.to_mac_address = to_mac_address;
-    /* TODO:接收或发送的数组是MSB还是LSB需要验证 */
+    /* TODO:1.接收或发送的数组是MSB还是LSB需要验证 */
     switch (step) {
         case step1:
-            HAL_TIM_Base_Start(&htim1);
-            HAL_TIM_Base_Start(&htim2);
-            network_layer_TOF_frame.delta_t[4] = delta_t_step1.time_ns;
-            network_layer_TOF_frame.delta_t[3] =
+            TOF_GLOBAL_LOCK = true;
+            if(!TOF_step_timer_start) {
+                HAL_TIM_Base_Start(&htim1);
+                HAL_TIM_Base_Start(&htim2);
+            }else{
+                //Do Nothing
+            }
+            /*开启超时定时器*/
+            TOF_step_timer_start = true;
+            TOF_step_timer_record_to_mac_address = to_mac_address;
+            TOF_step_timer_record_step = step1;
+            /*************/
+            network_layer_TOF_frame.delta_t[0] = delta_t_step1.time_ns;
+            network_layer_TOF_frame.delta_t[1] =
                     (delta_t_step1.time_ns >> 8) | (delta_t_step1.time_us << 2);
             network_layer_TOF_frame.delta_t[2] =
                     (delta_t_step1.time_us >> 6) | (delta_t_step1.time_ms << 4);
-            network_layer_TOF_frame.delta_t[1] =
+            network_layer_TOF_frame.delta_t[3] =
                     (delta_t_step1.time_ms >> 4) | (delta_t_step1.time_s << 6);
-            network_layer_TOF_frame.delta_t[0] = (delta_t_step1.time_s >> 2) | step;
+            network_layer_TOF_frame.delta_t[4] = (delta_t_step1.time_s >> 2) | (step << 4);
             break;
         case step2:
-            HAL_TIM_Base_Start(&htim1);
-            HAL_TIM_Base_Start(&htim2);
-            network_layer_TOF_frame.delta_t[4] = delta_t_step2.time_ns;
-            network_layer_TOF_frame.delta_t[3] =
-                    (delta_t_step2.time_ns >> 8) | (delta_t_step2.time_us << 2);
-            network_layer_TOF_frame.delta_t[2] =
-                    (delta_t_step2.time_us >> 6) | (delta_t_step2.time_ms << 4);
+            if(TOF_step_timer_start) {
+                HAL_TIM_Base_Start(&htim1);
+                HAL_TIM_Base_Start(&htim2);
+            }else{
+                //Do Nothing
+            }
+            /*开启超时定时器*/
+            TOF_step_timer_start = true;
+            TOF_step_timer_record_to_mac_address = to_mac_address;
+            TOF_step_timer_record_step = step2;
+            /*************/
+            network_layer_TOF_frame.delta_t[0] = delta_t_step1.time_ns;
             network_layer_TOF_frame.delta_t[1] =
-                    (delta_t_step2.time_ms >> 4) | (delta_t_step2.time_s << 6);
-            network_layer_TOF_frame.delta_t[0] = (delta_t_step2.time_s >> 2) | step;
+                    (delta_t_step1.time_ns >> 8) | (delta_t_step1.time_us << 2);
+            network_layer_TOF_frame.delta_t[2] =
+                    (delta_t_step1.time_us >> 6) | (delta_t_step1.time_ms << 4);
+            network_layer_TOF_frame.delta_t[3] =
+                    (delta_t_step1.time_ms >> 4) | (delta_t_step1.time_s << 6);
+            network_layer_TOF_frame.delta_t[4] = (delta_t_step1.time_s >> 2) | (step << 4);
             break;
         case step3:
 //            HAL_TIM_Base_Start(&htim1);
 //            HAL_TIM_Base_Start(&htim2);
-            network_layer_TOF_frame.delta_t[4] = delta_t_step3.time_ns;
-            network_layer_TOF_frame.delta_t[3] =
-                    (delta_t_step3.time_ns >> 8) | (delta_t_step3.time_us << 2);
-            network_layer_TOF_frame.delta_t[2] =
-                    (delta_t_step3.time_us >> 6) | (delta_t_step3.time_ms << 4);
+            /*开启超时定时器*/
+            TOF_step_timer_start = true;
+            TOF_step_timer_record_to_mac_address = to_mac_address;
+            TOF_step_timer_record_step = step3;
+            /*************/
+            network_layer_TOF_frame.delta_t[0] = delta_t_step1.time_ns;
             network_layer_TOF_frame.delta_t[1] =
-                    (delta_t_step3.time_ms >> 4) | (delta_t_step3.time_s << 6);
-            network_layer_TOF_frame.delta_t[0] = (delta_t_step3.time_s >> 2) | step;
+                    (delta_t_step1.time_ns >> 8) | (delta_t_step1.time_us << 2);
+            network_layer_TOF_frame.delta_t[2] =
+                    (delta_t_step1.time_us >> 6) | (delta_t_step1.time_ms << 4);
+            network_layer_TOF_frame.delta_t[3] =
+                    (delta_t_step1.time_ms >> 4) | (delta_t_step1.time_s << 6);
+            network_layer_TOF_frame.delta_t[4] = (delta_t_step1.time_s >> 2) | (step << 4);
             break;
         case step4:
-            network_layer_TOF_frame.delta_t[4] = delta_t_step4.time_ns;
-            network_layer_TOF_frame.delta_t[3] =
-                    (delta_t_step4.time_ns >> 8) | (delta_t_step4.time_us << 2);
-            network_layer_TOF_frame.delta_t[2] =
-                    (delta_t_step4.time_us >> 6) | (delta_t_step4.time_ms << 4);
+            /*开启超时定时器*/
+            TOF_step_timer_start = true;
+            TOF_step_timer_record_to_mac_address = to_mac_address;
+            TOF_step_timer_record_step = step4;
+            /*************/
+            network_layer_TOF_frame.delta_t[0] = delta_t_step1.time_ns;
             network_layer_TOF_frame.delta_t[1] =
-                    (delta_t_step4.time_ms >> 4) | (delta_t_step4.time_s << 6);
-            network_layer_TOF_frame.delta_t[0] = (delta_t_step4.time_s >> 2) | step;
+                    (delta_t_step1.time_ns >> 8) | (delta_t_step1.time_us << 2);
+            network_layer_TOF_frame.delta_t[2] =
+                    (delta_t_step1.time_us >> 6) | (delta_t_step1.time_ms << 4);
+            network_layer_TOF_frame.delta_t[3] =
+                    (delta_t_step1.time_ms >> 4) | (delta_t_step1.time_s << 6);
+            network_layer_TOF_frame.delta_t[4] = (delta_t_step1.time_s >> 2) | (step << 4);
+            TOF_GLOBAL_LOCK = false;/* 只有step4之后才会放开锁 */
             break;
         default:
             break;
@@ -263,21 +300,25 @@ uint8_t network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address) {
 
     result = data_link_layer_send((uint8_t *) &network_layer_TOF_frame);
 
+    network_layer_send_state = sending_TOF_frame;
+
     return result;
 }
 
 void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TOF_frame) {
     TOF_delta_t_t TOF_delta_t;
 
-    TOF_delta_t.time_ns = network_layer_TOF_frame->delta_t[4] | (network_layer_TOF_frame->delta_t[3] & 0x3);
-    TOF_delta_t.time_us = (network_layer_TOF_frame->delta_t[3] >> 2) | (network_layer_TOF_frame->delta_t[2] & 0xF);
-    TOF_delta_t.time_ms = (network_layer_TOF_frame->delta_t[2] >> 4) | (network_layer_TOF_frame->delta_t[1] & 0x3F);
-    TOF_delta_t.time_s = (network_layer_TOF_frame->delta_t[1] >> 4) | (network_layer_TOF_frame->delta_t[0] & 0xF);
-    TOF_delta_t.step = network_layer_TOF_frame->delta_t[0] >> 4;
+    TOF_delta_t.time_ns = network_layer_TOF_frame->delta_t[0] | (network_layer_TOF_frame->delta_t[1] & 0x3);
+    TOF_delta_t.time_us = (network_layer_TOF_frame->delta_t[1] >> 2) | (network_layer_TOF_frame->delta_t[2] & 0xF);
+    TOF_delta_t.time_ms = (network_layer_TOF_frame->delta_t[2] >> 4) | (network_layer_TOF_frame->delta_t[3] & 0x3F);
+    TOF_delta_t.time_s = (network_layer_TOF_frame->delta_t[3] >> 4) | (network_layer_TOF_frame->delta_t[4] & 0xF);
+    TOF_delta_t.step = network_layer_TOF_frame->delta_t[4] >> 4;
 
     switch (TOF_delta_t.step)
     {
         case step1:
+            TOF_GLOBAL_LOCK = true;/* 只有接收step4之后才会放开锁 */
+            TOF_step_timer_start = false;//关闭定时器
             /* step1接收侧保存发送侧数据 */
 //            delta_t_step1.step = TOF_delta_t.step;
 //            delta_t_step1.time_ns = TOF_delta_t.time_ns;
@@ -292,6 +333,7 @@ void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TO
 //            delta_t_step2.time_us = TOF_delta_t.time_us;
 //            delta_t_step2.time_ms = TOF_delta_t.time_ms;
 //            delta_t_step2.time_s = TOF_delta_t.time_s;
+            TOF_step_timer_start = false;//关闭定时器
             /* TODO:step2接收侧更新时间，更新delta_t_step3，并请求发送 */
             HAL_TIM_Base_Stop(&htim1);
             HAL_TIM_Base_Stop(&htim2);
@@ -304,6 +346,7 @@ void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TO
             network_layer_TOF_frame_send(step3,network_layer_TOF_frame->from_mac_address);
             break;
         case step3:
+            TOF_step_timer_start = false;//关闭定时器
             /* TODO:step3接收侧更新时间，更新delta_t_step4，并请求发送 */
             HAL_TIM_Base_Stop(&htim1);
             HAL_TIM_Base_Stop(&htim2);
@@ -316,6 +359,7 @@ void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TO
             network_layer_TOF_frame_send(step4,network_layer_TOF_frame->from_mac_address);
             break;
         case step4:
+            TOF_step_timer_start = false;//关闭定时器
             /* TODO:定位发起侧接收最后TOF报文 */
             delta_t_6_3.step = TOF_delta_t.step;
             delta_t_6_3.time_ns = TOF_delta_t.time_ns;
@@ -334,6 +378,8 @@ void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TO
                         (delta_t_6_3.time_us + delta_t_5_4.time_us)*1000 +
                         (delta_t_6_3.time_ns + delta_t_5_4.time_ns))/4 -
                                 (TOF_delta_S + TOF_delta_R + TOF_clock_offset);
+
+            TOF_GLOBAL_LOCK = false;/* 只有接收step4之后才会放开锁 */
             break;
         
         default:
@@ -353,8 +399,14 @@ uint8_t network_layer_receive_callback(uint8_t *data, uint8_t length) {
     /* 同步处理报文 */
     switch (data[0]) {
         case TOF_frame: {
+//            TOF_GLOBAL_LOCK = true;
             network_layer_TOF_frame_t *network_layer_TOF_frame = (network_layer_TOF_frame_t *) data;
-            network_layer_TOF_frame_receive(network_layer_TOF_frame);
+            if(network_layer_TOF_frame->to_mac_address == Current_MAC_Address) {
+                //确认本机为目的地址才进行处理
+                network_layer_TOF_frame_receive(network_layer_TOF_frame);
+            }else{
+                //Do Nothing
+            }
         }
             break;
 
@@ -612,6 +664,19 @@ void network_layer_ack_timer_management(void) {
         }
     } else {
         waiting_ack_frame_timer_counter = 10;
+    }
+}
+
+void network_layer_TOF_step_timer_management(void){
+    if(TOF_step_timer_start){
+        TOF_step_timer_counter--;
+        if(TOF_step_timer_counter == 0){
+            //重发报文
+            network_layer_TOF_frame_send(TOF_step_timer_record_step,TOF_step_timer_record_to_mac_address);
+            TOF_step_timer_counter = 200;
+        }
+    }else{
+        TOF_step_timer_counter = 200;
     }
 }
 

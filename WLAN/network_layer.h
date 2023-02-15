@@ -42,6 +42,7 @@ typedef enum{
     sending_location_frame,
     sending_location_ack_frame,
     sending_forwarding_frame,            //正在转发报文
+    sending_TOF_frame,
     waiting_single_data_ack_frame,      //正在等待单帧ACK
     waiting_multiple_data_ack_frame,      //正在等待多帧ACK
     sending_frame_pending,//发送pending //TODO:因此需要添加pending超时机制
@@ -241,4 +242,5 @@ network_layer_receive_state_enum get_network_layer_receive_state(void);
 
 void network_layer_forwarding_table_timer_management(void);
 void network_layer_ack_timer_management(void);
+void network_layer_TOF_step_timer_management(void);
 void network_layer_main_function(void);
