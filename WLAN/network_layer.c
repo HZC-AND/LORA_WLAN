@@ -21,6 +21,8 @@
 
 #include "tim.h"
 
+#include "usart.h"
+
 /* 路由表 */
 
 /* 定位表 */
@@ -96,6 +98,8 @@ uint64_t TOF_result = 0;
 uint64_t TOF_delta_S = 0;
 uint64_t TOF_delta_R = 0;
 uint64_t TOF_clock_offset = 0;
+
+extern uint8_t UART_Transmit_data[20];
 /*****************/
 
 /* TOF接收数据报文 */
@@ -241,7 +245,7 @@ uint8_t network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address) {
             network_layer_TOF_frame.delta_t[4] = (delta_t_step1.time_s >> 2) | (step << 4);
             break;
         case step2:
-            if(TOF_step_timer_start) {
+            if(!TOF_step_timer_start) {
                 HAL_TIM_Base_Start(&htim1);
                 HAL_TIM_Base_Start(&htim2);
             }else{
@@ -252,14 +256,14 @@ uint8_t network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address) {
             TOF_step_timer_record_to_mac_address = to_mac_address;
             TOF_step_timer_record_step = step2;
             /*************/
-            network_layer_TOF_frame.delta_t[0] = delta_t_step1.time_ns;
+            network_layer_TOF_frame.delta_t[0] = delta_t_step2.time_ns;
             network_layer_TOF_frame.delta_t[1] =
-                    (delta_t_step1.time_ns >> 8) | (delta_t_step1.time_us << 2);
+                    (delta_t_step2.time_ns >> 8) | (delta_t_step2.time_us << 2);
             network_layer_TOF_frame.delta_t[2] =
-                    (delta_t_step1.time_us >> 6) | (delta_t_step1.time_ms << 4);
+                    (delta_t_step2.time_us >> 6) | (delta_t_step2.time_ms << 4);
             network_layer_TOF_frame.delta_t[3] =
-                    (delta_t_step1.time_ms >> 4) | (delta_t_step1.time_s << 6);
-            network_layer_TOF_frame.delta_t[4] = (delta_t_step1.time_s >> 2) | (step << 4);
+                    (delta_t_step2.time_ms >> 4) | (delta_t_step2.time_s << 6);
+            network_layer_TOF_frame.delta_t[4] = (delta_t_step2.time_s >> 2) | (step << 4);
             break;
         case step3:
 //            HAL_TIM_Base_Start(&htim1);
@@ -269,14 +273,14 @@ uint8_t network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address) {
             TOF_step_timer_record_to_mac_address = to_mac_address;
             TOF_step_timer_record_step = step3;
             /*************/
-            network_layer_TOF_frame.delta_t[0] = delta_t_step1.time_ns;
+            network_layer_TOF_frame.delta_t[0] = delta_t_step3.time_ns;
             network_layer_TOF_frame.delta_t[1] =
-                    (delta_t_step1.time_ns >> 8) | (delta_t_step1.time_us << 2);
+                    (delta_t_step3.time_ns >> 8) | (delta_t_step3.time_us << 2);
             network_layer_TOF_frame.delta_t[2] =
-                    (delta_t_step1.time_us >> 6) | (delta_t_step1.time_ms << 4);
+                    (delta_t_step3.time_us >> 6) | (delta_t_step3.time_ms << 4);
             network_layer_TOF_frame.delta_t[3] =
-                    (delta_t_step1.time_ms >> 4) | (delta_t_step1.time_s << 6);
-            network_layer_TOF_frame.delta_t[4] = (delta_t_step1.time_s >> 2) | (step << 4);
+                    (delta_t_step3.time_ms >> 4) | (delta_t_step3.time_s << 6);
+            network_layer_TOF_frame.delta_t[4] = (delta_t_step3.time_s >> 2) | (step << 4);
             break;
         case step4:
             /*开启超时定时器*/
@@ -284,14 +288,14 @@ uint8_t network_layer_TOF_frame_send(uint8_t step, uint8_t to_mac_address) {
             TOF_step_timer_record_to_mac_address = to_mac_address;
             TOF_step_timer_record_step = step4;
             /*************/
-            network_layer_TOF_frame.delta_t[0] = delta_t_step1.time_ns;
+            network_layer_TOF_frame.delta_t[0] = delta_t_step4.time_ns;
             network_layer_TOF_frame.delta_t[1] =
-                    (delta_t_step1.time_ns >> 8) | (delta_t_step1.time_us << 2);
+                    (delta_t_step4.time_ns >> 8) | (delta_t_step4.time_us << 2);
             network_layer_TOF_frame.delta_t[2] =
-                    (delta_t_step1.time_us >> 6) | (delta_t_step1.time_ms << 4);
+                    (delta_t_step4.time_us >> 6) | (delta_t_step4.time_ms << 4);
             network_layer_TOF_frame.delta_t[3] =
-                    (delta_t_step1.time_ms >> 4) | (delta_t_step1.time_s << 6);
-            network_layer_TOF_frame.delta_t[4] = (delta_t_step1.time_s >> 2) | (step << 4);
+                    (delta_t_step4.time_ms >> 4) | (delta_t_step4.time_s << 6);
+            network_layer_TOF_frame.delta_t[4] = (delta_t_step4.time_s >> 2) | (step << 4);
             TOF_GLOBAL_LOCK = false;/* 只有step4之后才会放开锁 */
             break;
         default:
@@ -320,27 +324,17 @@ void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TO
             TOF_GLOBAL_LOCK = true;/* 只有接收step4之后才会放开锁 */
             TOF_step_timer_start = false;//关闭定时器
             /* step1接收侧保存发送侧数据 */
-//            delta_t_step1.step = TOF_delta_t.step;
-//            delta_t_step1.time_ns = TOF_delta_t.time_ns;
-//            delta_t_step1.time_us = TOF_delta_t.time_us;
-//            delta_t_step1.time_ms = TOF_delta_t.time_ms;
-//            delta_t_step1.time_s = TOF_delta_t.time_s;
             network_layer_TOF_frame_send(step2,network_layer_TOF_frame->from_mac_address);
             break;
         case step2:
-//            delta_t_step2.step = TOF_delta_t.step;
-//            delta_t_step2.time_ns = TOF_delta_t.time_ns;
-//            delta_t_step2.time_us = TOF_delta_t.time_us;
-//            delta_t_step2.time_ms = TOF_delta_t.time_ms;
-//            delta_t_step2.time_s = TOF_delta_t.time_s;
             TOF_step_timer_start = false;//关闭定时器
             /* TODO:step2接收侧更新时间，更新delta_t_step3，并请求发送 */
-            HAL_TIM_Base_Stop(&htim1);
-            HAL_TIM_Base_Stop(&htim2);
-            delta_t_4_1.time_s = (htim1.Instance->CNT - htim1.Instance->CNT % 1000)/1000;
-            delta_t_4_1.time_ms = htim1.Instance->CNT % 1000;
+            delta_t_4_1.time_s = (htim1.Instance->CNT - (htim2.Instance->CNT / 1000))/1000;
+            delta_t_4_1.time_ms = (htim1.Instance->CNT - (htim2.Instance->CNT / 1000)) % 1000;
             delta_t_4_1.time_us = htim2.Instance->CNT % 1000;
             delta_t_4_1.time_ns = 0;
+            HAL_TIM_Base_Stop(&htim1);
+            HAL_TIM_Base_Stop(&htim2);
             htim1.Instance->CNT = 0;
             htim2.Instance->CNT = 0;
             network_layer_TOF_frame_send(step3,network_layer_TOF_frame->from_mac_address);
@@ -348,12 +342,12 @@ void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TO
         case step3:
             TOF_step_timer_start = false;//关闭定时器
             /* TODO:step3接收侧更新时间，更新delta_t_step4，并请求发送 */
-            HAL_TIM_Base_Stop(&htim1);
-            HAL_TIM_Base_Stop(&htim2);
-            delta_t_step4.time_s = (htim1.Instance->CNT - htim1.Instance->CNT % 1000)/1000;
-            delta_t_step4.time_ms = htim1.Instance->CNT % 1000;
+            delta_t_step4.time_s = (htim1.Instance->CNT - (htim2.Instance->CNT / 1000))/1000;
+            delta_t_step4.time_ms = (htim1.Instance->CNT - (htim2.Instance->CNT / 1000)) % 1000;
             delta_t_step4.time_us = htim2.Instance->CNT % 1000;
             delta_t_step4.time_ns = 0;
+            HAL_TIM_Base_Stop(&htim1);
+            HAL_TIM_Base_Stop(&htim2);
             htim1.Instance->CNT = 0;
             htim2.Instance->CNT = 0;
             network_layer_TOF_frame_send(step4,network_layer_TOF_frame->from_mac_address);
@@ -373,12 +367,17 @@ void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TO
 //            delta_t_6_3.time_ns = delta_t_step4.time_ns;
 
             //单位ns
-            TOF_result = ((delta_t_6_3.time_s + delta_t_5_4.time_s)*1000000000 +
-                        (delta_t_6_3.time_ms + delta_t_5_4.time_ms)*1000000 +
-                        (delta_t_6_3.time_us + delta_t_5_4.time_us)*1000 +
-                        (delta_t_6_3.time_ns + delta_t_5_4.time_ns))/4 -
+            TOF_result = ((delta_t_6_3.time_s + delta_t_4_1.time_s)*1000000000 +
+                        (delta_t_6_3.time_ms + delta_t_4_1.time_ms)*1000000 +
+                        (delta_t_6_3.time_us + delta_t_4_1.time_us)*1000 +
+                        (delta_t_6_3.time_ns + delta_t_4_1.time_ns))/4 -
                                 (TOF_delta_S + TOF_delta_R + TOF_clock_offset);
-
+            UART_Transmit_data[0] = 0x3;
+            UART_Transmit_data[1] = TOF_result;
+            UART_Transmit_data[2] = TOF_result >> 8;
+            UART_Transmit_data[3] = TOF_result >> 16;
+            UART_Transmit_data[4] = TOF_result >> 24;
+            HAL_UART_Transmit(&huart1, &UART_Transmit_data[0], 5, 0xFFFF);
             TOF_GLOBAL_LOCK = false;/* 只有接收step4之后才会放开锁 */
             break;
         
