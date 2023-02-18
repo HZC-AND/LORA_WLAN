@@ -41,6 +41,8 @@ network_layer_receive_state_enum network_layer_receive_state = received_idle;
 /* 接收数据的全局变量 */
 network_layer_data_frame_t network_layer_receive_data_frame;
 network_layer_data_ack_frame_t network_layer_receive_data_ack_frame;
+network_layer_location_frame_t network_layer_receive_location_frame;
+network_layer_location_ack_frame_t network_layer_receive_location_ack_frame;
 /* **************** */
 
 /* 发送数据的全局变量 */
@@ -114,6 +116,9 @@ uint8_t TOF_step_timer_record_to_mac_address = 0;
 uint8_t TOF_step_timer_counter = 200;
 /* ************* */
 
+/* 用于全局暂存特殊功能帧的数据 */
+uint8_t network_layer_special_function_frame_send_data[10];
+
 void network_layer_init(void) {
 
     network_layer_receive_data_frame.data = &receive_data_buffer[0];
@@ -166,18 +171,47 @@ uint8_t network_layer_data_frame_send(uint8_t *data, uint8_t length, uint8_t to_
     return 1;
 }
 
-/* TODO:完善函数 */
-void network_layer_location_frame_send(void) {
-    network_layer_data_frame_t network_layer_data_frame;
-    network_layer_data_frame.frame_type = location_frame;
-    // data_link_layer_send();
+/*
+给上层调用的执行特殊功能数据发送的函数,异步发送
+ */
+uint8_t network_layer_special_function_frame_send_asyn(network_layer_frame_type_enum type, uint8_t to_mac_address){
+
+    switch (type) {
+        case location_frame:
+
+//            network_layer_special_function_frame_send_data[0]
+            network_layer_special_function_frame_send_data[0] = to_mac_address;
+            network_layer_send_state = sending_location_frame;
+//            network_layer_location_frame_send();//这个函数在Main Function中调用
+            break;
+        case location_ack_frame:
+            network_layer_special_function_frame_send_data[0] =  network_layer_receive_location_frame.from_mac_address;
+            network_layer_special_function_frame_send_data[0] = SX1278_H_RSSI_LoRa();
+            network_layer_send_state = sending_location_ack_frame;
+            break;
+        default:
+            break;
+    }
+
+    return 1;
 }
 
 /* TODO:完善函数 */
+void network_layer_location_frame_send(void) {
+    network_layer_location_frame_t network_layer_location_frame;
+    network_layer_location_frame.frame_type = location_frame;
+    network_layer_location_frame.from_mac_address = Current_MAC_Address;
+    network_layer_location_frame.to_mac_address = network_layer_special_function_frame_send_data[0];
+    data_link_layer_send((uint8_t*)&network_layer_location_frame);
+}
+
+/* TODO:完善函数 2023-2-18*/
 void network_layer_location_ack_frame_send(void) {
-    network_layer_data_frame_t network_layer_data_frame;
-    network_layer_data_frame.frame_type = location_ack_frame;
-    // data_link_layer_send();
+    network_layer_location_ack_frame_t network_layer_location_ack_frame;
+    network_layer_location_ack_frame.frame_type = location_ack_frame;
+    network_layer_location_ack_frame.from_mac_address = Current_MAC_Address;
+    network_layer_location_ack_frame.to_mac_address = network_layer_special_function_frame_send_data[0];
+     data_link_layer_send((uint8_t*)&network_layer_location_ack_frame);
 }
 /**
  * @brief 重发送帧发送函数
@@ -474,17 +508,26 @@ uint8_t copy_data_to_receive_frame(uint8_t *data) {
         }
             break;
         case retransmission_frame: {
-            network_layer_retransmission_frame_t *network_layer_retransmission_frame = (network_layer_retransmission_frame_t *) data;
+            /* TODO: */
+//            network_layer_retransmission_frame_t *network_layer_retransmission_frame = (network_layer_retransmission_frame_t *) data;
         }
             break;
         case location_frame: {
-            /* TODO: */
-            network_layer_location_frame_t *network_layer_location_frame = (network_layer_location_frame_t *) data;
+            network_layer_receive_location_frame.frame_type = data[0];
+            network_layer_receive_location_frame.from_mac_address = data[1];
+            network_layer_receive_location_frame.to_mac_address = data[2];
+
+            network_layer_receive_state = received_location_frame;
+
         }
             break;
         case location_ack_frame: {
-            /* TODO: */
-            network_layer_location_ack_frame_t *network_layer_location_ack_frame = (network_layer_location_ack_frame_t *) data;
+            network_layer_receive_location_ack_frame.frame_type = data[0];
+            network_layer_receive_location_ack_frame.from_mac_address = data[1];
+            network_layer_receive_location_ack_frame.to_mac_address = data[2];
+            network_layer_receive_location_ack_frame.rssi_data = data[3];
+
+            network_layer_receive_state = received_location_ack_frame;
         }
             break;
         default:
@@ -780,10 +823,14 @@ void network_layer_main_function(void) {
                 network_layer_receive_state = received_idle;
                 break;
             case received_location_frame:
-                /* TODO:处理转发逻辑 */
-                /* *********** */
-
-                /* TODO:确认为本机接收报文 */
+                if(network_layer_receive_location_frame.from_mac_address != Current_MAC_Address){
+                    if(network_layer_receive_location_frame.to_mac_address == Current_MAC_Address){
+                        /*TODO:获取RSSI数据，并通知异步发送出去*/
+                        network_layer_special_function_frame_send_asyn(location_ack_frame,network_layer_receive_location_frame.from_mac_address);
+                    }
+                }else{
+                    /* Do Nothing */
+                }
                 /* **************** */
                 network_layer_receive_state = received_idle;
                 break;
@@ -791,7 +838,15 @@ void network_layer_main_function(void) {
                 /* TODO:处理转发逻辑 */
                 /* *********** */
 
-                /* TODO:确认为本机接收报文 */
+                /* TODO:确认为本机接收报文 2023-2-18*/
+                if(network_layer_receive_location_ack_frame.from_mac_address != Current_MAC_Address){
+                    if(network_layer_receive_location_ack_frame.to_mac_address == Current_MAC_Address){
+                        /*TODO:获取RSSI数据，并通知异步发送出去*/
+                        network_layer_special_function_frame_send_asyn(location_ack_frame,network_layer_receive_location_frame.from_mac_address);
+                    }
+                }else{
+                    /* Do Nothing */
+                }
                 /* **************** */
                 network_layer_receive_state = received_idle;
                 break;
@@ -844,8 +899,12 @@ void network_layer_main_function(void) {
             case sending_retransmission_frame:
                 break;
             case sending_location_frame:
+                network_layer_location_frame_send();
+                network_layer_send_state = sending_idle;
                 break;
             case sending_location_ack_frame:
+                network_layer_location_ack_frame_send();
+                network_layer_send_state = sending_idle;
                 break;
             case waiting_single_data_ack_frame: {
                 if (waiting_ack_frame_timer_timeout == 1) {

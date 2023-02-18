@@ -16,7 +16,6 @@ void SX1278_test_init(){
 }
 
 void SX1278_test_tx(){
-    SX1278_TX_Once(&SX1278,&SX1278_test_tx_buffer[0],10,200);
 }
 /**
  * @brief 测试CAD模式

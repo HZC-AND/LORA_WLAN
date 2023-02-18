@@ -144,6 +144,7 @@ typedef struct
     /* data */
     uint8_t frame_type;
     uint8_t from_mac_address;
+    uint8_t to_mac_address;
 }network_layer_location_frame_t;
 
 typedef struct
@@ -217,6 +218,7 @@ typedef struct
 
 void network_layer_init(void);
 uint8_t network_layer_data_frame_send(uint8_t* data, uint8_t length, uint8_t to_mac_address);
+uint8_t network_layer_special_function_frame_send_asyn(network_layer_frame_type_enum type, uint8_t to_mac_address);
 void network_layer_location_frame_send(void);
 void network_layer_location_ack_frame_send(void);
 void network_layer_retransmission_frame_send(void);

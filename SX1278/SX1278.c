@@ -667,6 +667,25 @@ SX1278_Running_Status_t SX1278_H_Get_Running_Status(void){
     return SX1278.Running_Status;
 }
 
+uint8_t SX1278_H_RSSI_LoRa(void)
+{
+    /*Ref:https://cloud.tencent.com/developer/article/1615993*/
+//    int32_t PacketSnr = (int32_t)(SX1278_SPIRead(module, LR_RegPktSnrValue) / 4);
+//    uint32_t PacketRssi = SX1278_SPIRead(module, LR_RegPktRssiValue);
+//    uint32_t Rssi = SX1278_SPIRead(module, LR_RegRssiValue);
+//    if(PacketSnr < 0){
+//
+//    }else{
+//
+//    }
+
+    /*根据官方文档*/
+    uint32_t temp = 10;
+    temp = SX1278_SPIRead(&SX1278, LR_RegRssiValue); // Read RegRssiValue, Rssi value
+    temp = temp + 127 - 137;                        // 127:Max RSSI, 137:RSSI offset
+    return (uint8_t)temp;
+}
+
 uint8_t SX1278_H_TX_Once(SX1278_t *module, uint8_t *txBuffer, uint8_t length, uint32_t timeout){
     SX1278_H_Enter_TX(module,length);
     SX1278_SPIBurstWrite(module, 0x00, txBuffer, length);//将数据写入FIFO

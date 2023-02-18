@@ -1029,6 +1029,7 @@ void SX1278_H_Config(SX1278_t *module);
 uint8_t SX1278_H_Enter_TX(SX1278_t *module,uint8_t length);
 uint8_t SX1278_H_Enter_RX(SX1278_t *module,uint8_t length);
 SX1278_Running_Status_t SX1278_H_Get_Running_Status(void);
+uint8_t SX1278_H_RSSI_LoRa(void);
 uint8_t SX1278_H_TX_Once(SX1278_t *module, uint8_t *txBuffer, uint8_t length, uint32_t timeout);
 uint8_t SX1278_H_RX_Once(SX1278_t *module, uint8_t length, uint32_t timeout);
 void SX1278_H_Init(SX1278_t *module, uint64_t frequency, uint8_t power,
