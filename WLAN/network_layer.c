@@ -808,24 +808,14 @@ void network_layer_main_function(void) {
         switch (network_layer_send_state) {
             case sending_single_data_frame:
                 /* code */
-//                uint8_t result = network_layer_data_frame_send_single_frame();
-//                if(network_layer_data_frame_send_single_frame()){
-//                    if(Communication_Mode == point_to_point){
-//                        /* 点播模式，需要ACK */
-//                        network_layer_send_state = waiting_single_data_ack_frame;
-//                        waiting_ack_frame_timer_start = 1;//开启ACK计时器
-//                    }else{
-//                        network_layer_send_state = sending_idle;
-//                    }
-//                }else{
-//                    /* 此次发送失败 */
-//                }
                 if (network_layer_data_frame_send_single_frame()) {
-//                    if(SX1278_H_Get_Running_Status() == SX1278_RUNNING_IDLE){
+                    if(Communication_Mode == point_to_point){
+                        /* 点播模式，需要ACK */
+                        network_layer_send_state = waiting_single_data_ack_frame;
+                        waiting_ack_frame_timer_start = 1;//开启ACK计时器
+                    }else{
                         network_layer_send_state = sending_idle;
-//                    }else{
-//                        network_layer_send_state = sending_frame_pending;
-//                    }
+                    }
                 }else{
                     /* 此次发送失败 */
                 }
