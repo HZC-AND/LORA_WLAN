@@ -76,10 +76,11 @@ uint8_t data_link_layer_send(uint8_t* data){
     data_send_buffer_for_sx1278[0] = (uint8_t)(*(uint8_t*)(&data_link_layer_frame.function));
     data_send_buffer_for_sx1278[1] = data_link_layer_frame.MAC_Address;
     data_send_buffer_for_sx1278[2] = data_link_layer_frame.data_length;
-    for (uint8_t i = 0; i < data_link_layer_frame.data_length; i++)
-    {
-        data_send_buffer_for_sx1278[i + 3] = data_link_layer_frame.network_layer_data[i];
-    }
+    // for (uint8_t i = 0; i < data_link_layer_frame.data_length; i++)
+    // {
+    //     data_send_buffer_for_sx1278[i + 3] = data_link_layer_frame.network_layer_data[i];
+    // }
+    memcpy(&data_send_buffer_for_sx1278[0] + 3,&data_link_layer_frame.network_layer_data[0],data_link_layer_frame.data_length);
     /* 计算CRC */
     data_link_layer_frame.CRC_8 = crc_8(&data_send_buffer_for_sx1278[0], data_length - 1);
     /**********/
@@ -112,9 +113,10 @@ uint8_t data_link_layer_receive_callback(uint8_t* data, uint8_t length){
     data_link_layer_frame_receive.MAC_Address = data[1];
     data_link_layer_frame_receive.data_length = data[2];
     data_link_layer_frame_receive.CRC_8 = data[length - 1];
-    for(uint8_t i = 0;i < data_link_layer_frame_receive.data_length;i++){
-        network_layer_frame_receive[i] = data[i + 3];
-    }
+    // for(uint8_t i = 0;i < data_link_layer_frame_receive.data_length;i++){
+    //     network_layer_frame_receive[i] = data[i + 3];
+    // }
+    memcpy(&network_layer_frame_receive[0],&data[0] + 3,data_link_layer_frame_receive.data_length);
     data_link_layer_frame_receive.network_layer_data = &network_layer_frame_receive[0];
     /*************/
     
