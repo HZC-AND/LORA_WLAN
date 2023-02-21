@@ -389,16 +389,12 @@ void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TO
         case step4:
             TOF_step_timer_start = false;//关闭定时器
             /* TODO:定位发起侧接收最后TOF报文 */
-            delta_t_6_3.step = TOF_delta_t.step;
-            delta_t_6_3.time_ns = TOF_delta_t.time_ns;
-            delta_t_6_3.time_us = TOF_delta_t.time_us;
-            delta_t_6_3.time_ms = TOF_delta_t.time_ms;
-            delta_t_6_3.time_s = TOF_delta_t.time_s;
-//            /* 使用memcpy */
-//            delta_t_6_3.time_s = delta_t_step4.time_s;
-//            delta_t_6_3.time_ms = delta_t_step4.time_ms;
-//            delta_t_6_3.time_us = delta_t_step4.time_us;
-//            delta_t_6_3.time_ns = delta_t_step4.time_ns;
+            // delta_t_6_3.step = TOF_delta_t.step;
+            // delta_t_6_3.time_ns = TOF_delta_t.time_ns;
+            // delta_t_6_3.time_us = TOF_delta_t.time_us;
+            // delta_t_6_3.time_ms = TOF_delta_t.time_ms;
+            // delta_t_6_3.time_s = TOF_delta_t.time_s;
+            memcpy(&delta_t_6_3, &TOF_delta_t, sizeof(TOF_delta_t_t));
 
             //单位ns
             TOF_result = ((delta_t_6_3.time_s + delta_t_4_1.time_s)*1000000000 +
@@ -458,15 +454,17 @@ uint8_t network_layer_receive_callback(uint8_t *data, uint8_t length) {
  * @param network_layer_data_frame 
  */
 void copy_data_to_send_buffer(uint8_t *buffer, network_layer_data_frame_t *network_layer_data_frame) {
-    buffer[0] = network_layer_data_frame->frame_type;
-    buffer[1] = network_layer_data_frame->message_number;
-    buffer[2] = network_layer_data_frame->message_counter;
-    buffer[3] = network_layer_data_frame->from_mac_address;
-    buffer[4] = network_layer_data_frame->to_mac_address;
-    buffer[5] = network_layer_data_frame->data_length;
-    for (uint8_t i = 0; i < network_layer_data_frame->data_length; i++) {
-        buffer[i + 6] = network_layer_data_frame->data[i];
-    }
+    // buffer[0] = network_layer_data_frame->frame_type;
+    // buffer[1] = network_layer_data_frame->message_number;
+    // buffer[2] = network_layer_data_frame->message_counter;
+    // buffer[3] = network_layer_data_frame->from_mac_address;
+    // buffer[4] = network_layer_data_frame->to_mac_address;
+    // buffer[5] = network_layer_data_frame->data_length;
+    memcpy(&buffer[0],network_layer_data_frame,6);
+    // for (uint8_t i = 0; i < network_layer_data_frame->data_length; i++) {
+    //     buffer[i + 6] = network_layer_data_frame->data[i];
+    // }
+    memcpy(&buffer[0] + 6,network_layer_data_frame,network_layer_data_frame->data_length);
 }
 
 /**
@@ -479,16 +477,17 @@ uint8_t copy_data_to_receive_frame(uint8_t *data) {
 
     switch (data[0]) {
         case data_frame: {
-            network_layer_receive_data_frame.frame_type = data[0];
-            network_layer_receive_data_frame.message_number = data[1];
-            network_layer_receive_data_frame.message_counter = data[2];
-            network_layer_receive_data_frame.from_mac_address = data[3];
-            network_layer_receive_data_frame.to_mac_address = data[4];
-            network_layer_receive_data_frame.data_length = data[5];
-            for (uint8_t i = 0; i < network_layer_receive_data_frame.data_length; i++) {
-//                    receive_data_buffer[i] = network_layer_data_frame->data[i];
-                receive_data_buffer[i] = data[6 + i];
-            }
+            // network_layer_receive_data_frame.frame_type = data[0];
+            // network_layer_receive_data_frame.message_number = data[1];
+            // network_layer_receive_data_frame.message_counter = data[2];
+            // network_layer_receive_data_frame.from_mac_address = data[3];
+            // network_layer_receive_data_frame.to_mac_address = data[4];
+            // network_layer_receive_data_frame.data_length = data[5];
+            memcpy(&network_layer_receive_data_frame,data,6);
+            // for (uint8_t i = 0; i < network_layer_receive_data_frame.data_length; i++) {
+            //     receive_data_buffer[i] = data[6 + i];
+            // }
+            memcpy(&network_layer_receive_data_frame,data + 6,network_layer_receive_data_frame.data_length);
             /* 状态机 */
             if (network_layer_receive_data_frame.message_number == 1) {
                 network_layer_receive_state = received_single_data_frame;
@@ -499,9 +498,10 @@ uint8_t copy_data_to_receive_frame(uint8_t *data) {
         }
             break;
         case data_ack_frame: {
-            network_layer_receive_data_ack_frame.frame_type = data[0];
-            network_layer_receive_data_ack_frame.from_mac_address = data[1];
-            network_layer_receive_data_ack_frame.to_mac_address = data[2];
+            // network_layer_receive_data_ack_frame.frame_type = data[0];
+            // network_layer_receive_data_ack_frame.from_mac_address = data[1];
+            // network_layer_receive_data_ack_frame.to_mac_address = data[2];
+            memcpy(&network_layer_receive_data_ack_frame,data,3);
             /* 状态机 */
             network_layer_receive_state = received_data_ack_frame;
             /* ***** */
@@ -513,19 +513,21 @@ uint8_t copy_data_to_receive_frame(uint8_t *data) {
         }
             break;
         case location_frame: {
-            network_layer_receive_location_frame.frame_type = data[0];
-            network_layer_receive_location_frame.from_mac_address = data[1];
-            network_layer_receive_location_frame.to_mac_address = data[2];
+            // network_layer_receive_location_frame.frame_type = data[0];
+            // network_layer_receive_location_frame.from_mac_address = data[1];
+            // network_layer_receive_location_frame.to_mac_address = data[2];
+            memcpy(&network_layer_receive_location_frame,data,3);
 
             network_layer_receive_state = received_location_frame;
 
         }
             break;
         case location_ack_frame: {
-            network_layer_receive_location_ack_frame.frame_type = data[0];
-            network_layer_receive_location_ack_frame.from_mac_address = data[1];
-            network_layer_receive_location_ack_frame.to_mac_address = data[2];
-            network_layer_receive_location_ack_frame.rssi_data = data[3];
+            // network_layer_receive_location_ack_frame.frame_type = data[0];
+            // network_layer_receive_location_ack_frame.from_mac_address = data[1];
+            // network_layer_receive_location_ack_frame.to_mac_address = data[2];
+            // network_layer_receive_location_ack_frame.rssi_data = data[3];
+            memcpy(&network_layer_receive_location_ack_frame,data,4);
 
             network_layer_receive_state = received_location_ack_frame;
         }
