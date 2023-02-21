@@ -11,6 +11,7 @@
  */
 
 
+#include <string.h>
 #include "network_layer.h"
 #include "data_link_layer.h"
 #include "device_info.h"
@@ -178,7 +179,7 @@ uint8_t network_layer_special_function_frame_send_asyn(network_layer_frame_type_
 
     switch (type) {
         case location_frame:
-
+            /*TODO:也应该使用锁，可直接使用TOF的全局锁*/
 //            network_layer_special_function_frame_send_data[0]
             network_layer_special_function_frame_send_data[0] = to_mac_address;
             network_layer_send_state = sending_location_frame;
@@ -464,7 +465,7 @@ void copy_data_to_send_buffer(uint8_t *buffer, network_layer_data_frame_t *netwo
     // for (uint8_t i = 0; i < network_layer_data_frame->data_length; i++) {
     //     buffer[i + 6] = network_layer_data_frame->data[i];
     // }
-    memcpy(&buffer[0] + 6,network_layer_data_frame,network_layer_data_frame->data_length);
+    memcpy(&buffer[0] + 6,network_layer_data_frame->data,network_layer_data_frame->data_length);
 }
 
 /**
@@ -487,7 +488,7 @@ uint8_t copy_data_to_receive_frame(uint8_t *data) {
             // for (uint8_t i = 0; i < network_layer_receive_data_frame.data_length; i++) {
             //     receive_data_buffer[i] = data[6 + i];
             // }
-            memcpy(&network_layer_receive_data_frame,data + 6,network_layer_receive_data_frame.data_length);
+            memcpy(&receive_data_buffer,data + 6,network_layer_receive_data_frame.data_length);
             /* 状态机 */
             if (network_layer_receive_data_frame.message_number == 1) {
                 network_layer_receive_state = received_single_data_frame;

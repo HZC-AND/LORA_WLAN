@@ -11,6 +11,7 @@
 
 
 #include "data_link_layer.h"
+#include <string.h>
 #include "../SX1278/SX1278.h"
 #include "device_info.h"
 
@@ -58,7 +59,7 @@ uint8_t data_link_layer_send(uint8_t* data){
             data_link_layer_frame.data_length = 3;
             break;
         case location_frame:
-            data_link_layer_frame.data_length = 2;
+            data_link_layer_frame.data_length = 3;
             break;
         case location_ack_frame:
             data_link_layer_frame.data_length = 4;
