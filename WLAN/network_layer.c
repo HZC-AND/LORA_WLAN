@@ -187,7 +187,7 @@ uint8_t network_layer_special_function_frame_send_asyn(network_layer_frame_type_
             break;
         case location_ack_frame:
             network_layer_special_function_frame_send_data[0] =  network_layer_receive_location_frame.from_mac_address;
-            network_layer_special_function_frame_send_data[0] = SX1278_H_RSSI_LoRa();
+            network_layer_special_function_frame_send_data[1] = SX1278_H_RSSI_LoRa();
             network_layer_send_state = sending_location_ack_frame;
             break;
         default:
@@ -212,6 +212,7 @@ void network_layer_location_ack_frame_send(void) {
     network_layer_location_ack_frame.frame_type = location_ack_frame;
     network_layer_location_ack_frame.from_mac_address = Current_MAC_Address;
     network_layer_location_ack_frame.to_mac_address = network_layer_special_function_frame_send_data[0];
+    network_layer_location_ack_frame.rssi_data = network_layer_special_function_frame_send_data[1];
      data_link_layer_send((uint8_t*)&network_layer_location_ack_frame);
 }
 /**
@@ -845,7 +846,14 @@ void network_layer_main_function(void) {
                 if(network_layer_receive_location_ack_frame.from_mac_address != Current_MAC_Address){
                     if(network_layer_receive_location_ack_frame.to_mac_address == Current_MAC_Address){
                         /*TODO:获取RSSI数据，并通知异步发送出去*/
-                        network_layer_special_function_frame_send_asyn(location_ack_frame,network_layer_receive_location_frame.from_mac_address);
+//                        network_layer_special_function_frame_send_asyn(location_ack_frame,network_layer_receive_location_frame.from_mac_address);
+                        UART_Transmit_data[0] = 0x4;
+                        UART_Transmit_data[1] = Current_MAC_Address;
+                        UART_Transmit_data[2] = Current_MAC_Address;
+                        UART_Transmit_data[3] = network_layer_receive_location_ack_frame.from_mac_address;
+                        UART_Transmit_data[4] = network_layer_receive_location_ack_frame.rssi_data;
+                        UART_Transmit_data[5] = SX1278_H_RSSI_LoRa();
+                        HAL_UART_Transmit(&huart1, &UART_Transmit_data[0], 6, 0xFFFF);
                     }
                 }else{
                     /* Do Nothing */
