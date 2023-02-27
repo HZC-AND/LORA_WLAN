@@ -102,6 +102,10 @@ uint64_t TOF_delta_S = 0;
 uint64_t TOF_delta_R = 0;
 uint64_t TOF_clock_offset = 0;
 
+//TOF结束标志
+volatile uint8_t TOF_end_flag = 0;
+volatile uint8_t RSSI_end_flag = 0;
+
 extern uint8_t UART_Transmit_data[20];
 /*****************/
 
@@ -411,6 +415,8 @@ void network_layer_TOF_frame_receive(network_layer_TOF_frame_t *network_layer_TO
             UART_Transmit_data[4] = TOF_result >> 24;
             HAL_UART_Transmit(&huart1, &UART_Transmit_data[0], 5, 0xFFFF);
             TOF_GLOBAL_LOCK = false;/* 只有接收step4之后才会放开锁 */
+
+            set_TOF_end_flag(1);/*通知此次TOF结束*/
             break;
         
         default:
@@ -602,6 +608,22 @@ network_layer_send_state_enum get_network_layer_send_state(void) {
 
 network_layer_receive_state_enum get_network_layer_receive_state(void) {
     return network_layer_receive_state;
+}
+
+uint8_t set_TOF_end_flag(uint8_t flag){
+    TOF_end_flag = flag;
+}
+
+uint8_t get_TOF_end_flag(void){
+    return TOF_end_flag;
+}
+
+uint8_t set_RSSI_end_flag(uint8_t flag){
+    RSSI_end_flag = flag;
+}
+
+uint8_t get_RSSI_end_flag(void){
+    return RSSI_end_flag;
 }
 
 static uint8_t network_layer_data_frame_send_single_frame(void) {
@@ -854,6 +876,8 @@ void network_layer_main_function(void) {
                         UART_Transmit_data[4] = network_layer_receive_location_ack_frame.rssi_data;
                         UART_Transmit_data[5] = SX1278_H_RSSI_LoRa();
                         HAL_UART_Transmit(&huart1, &UART_Transmit_data[0], 6, 0xFFFF);
+
+                        set_RSSI_end_flag(1);
                     }
                 }else{
                     /* Do Nothing */

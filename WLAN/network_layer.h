@@ -240,6 +240,11 @@ uint8_t split_frame_to_sub_frame_data_table(uint8_t* data, uint8_t length, uint8
 uint8_t combine_sub_frame_data(uint8_t* data, uint8_t length);
 network_layer_send_state_enum get_network_layer_send_state(void);
 network_layer_receive_state_enum get_network_layer_receive_state(void);
+uint8_t set_TOF_end_flag(uint8_t flag);
+uint8_t get_TOF_end_flag(void);
+uint8_t set_RSSI_end_flag(uint8_t flag);
+uint8_t get_RSSI_end_flag(void);
+
 
 
 void network_layer_forwarding_table_timer_management(void);
