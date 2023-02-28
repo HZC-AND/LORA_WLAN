@@ -124,8 +124,8 @@ void AFLP_main_function(void){
                 uint8_t index_max = 0;
                 uint8_t index_min = 0;
                 uint64_t sum = 0;
-                get_max_min_value_in_array(&TOF_result_temp[0],8,10,&index_max,&index_min);
-                for(uint8_t i = 0;i < 10,i++){
+                get_max_min_value_in_array((uint8_t*)&TOF_result_temp[0],8,10,&index_max,&index_min);
+                for(uint8_t i = 0;i < 10;i++){
                     if((i == index_max) || (i == index_min)){
                         continue;
                     }
@@ -136,8 +136,8 @@ void AFLP_main_function(void){
                 uint8_t index_max = 0;
                 uint8_t index_min = 0;
                 uint16_t sum = 0;
-                get_max_min_value_in_array(&RSSI_result_temp[0],8,10,&index_max,&index_min);
-                for(uint8_t i = 0;i < 10,i++){
+                get_max_min_value_in_array((uint8_t*)&RSSI_result_temp[0],8,10,&index_max,&index_min);
+                for(uint8_t i = 0;i < 10;i++){
                     if((i == index_max) || (i == index_min)){
                         continue;
                     }
