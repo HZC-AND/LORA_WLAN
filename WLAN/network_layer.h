@@ -244,6 +244,8 @@ uint8_t set_TOF_end_flag(uint8_t flag);
 uint8_t get_TOF_end_flag(void);
 uint8_t set_RSSI_end_flag(uint8_t flag);
 uint8_t get_RSSI_end_flag(void);
+uint64_t get_TOF_result(void);
+uint8_t get_RSSI_result(void);
 
 
 

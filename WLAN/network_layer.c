@@ -121,6 +121,11 @@ uint8_t TOF_step_timer_record_to_mac_address = 0;
 uint8_t TOF_step_timer_counter = 200;
 /* ************* */
 
+
+/* RSSI相关 */
+uint8_t RSSI_result = 0;
+/* ******* */
+
 /* 用于全局暂存特殊功能帧的数据 */
 uint8_t network_layer_special_function_frame_send_data[10];
 
@@ -626,6 +631,14 @@ uint8_t get_RSSI_end_flag(void){
     return RSSI_end_flag;
 }
 
+uint64_t get_TOF_result(void){
+    return TOF_result;
+}
+
+uint8_t get_RSSI_result(void){
+    return RSSI_result;
+}
+
 static uint8_t network_layer_data_frame_send_single_frame(void) {
     uint8_t result = 0;
 
@@ -869,12 +882,13 @@ void network_layer_main_function(void) {
                     if(network_layer_receive_location_ack_frame.to_mac_address == Current_MAC_Address){
                         /*TODO:获取RSSI数据，并通知异步发送出去*/
 //                        network_layer_special_function_frame_send_asyn(location_ack_frame,network_layer_receive_location_frame.from_mac_address);
+                        RSSI_result = SX1278_H_RSSI_LoRa();
                         UART_Transmit_data[0] = 0x4;
                         UART_Transmit_data[1] = Current_MAC_Address;
                         UART_Transmit_data[2] = Current_MAC_Address;
                         UART_Transmit_data[3] = network_layer_receive_location_ack_frame.from_mac_address;
                         UART_Transmit_data[4] = network_layer_receive_location_ack_frame.rssi_data;
-                        UART_Transmit_data[5] = SX1278_H_RSSI_LoRa();
+                        UART_Transmit_data[5] = RSSI_result;
                         HAL_UART_Transmit(&huart1, &UART_Transmit_data[0], 6, 0xFFFF);
 
                         set_RSSI_end_flag(1);

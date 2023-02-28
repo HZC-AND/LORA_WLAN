@@ -48,3 +48,5 @@ uint8_t stack_create(struct stack* new_stack, uint8_t* data, uint8_t stack_lengt
 /* CRC */
 uint8_t crc_8(uint8_t* data, uint8_t length);
 /* *** */
+
+void get_max_min_value_in_array(uint8_t* array,uint8_t element_length,uint8_t array_length,uint8_t* index_max,uint8_t* index_min);

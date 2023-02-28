@@ -165,3 +165,60 @@ uint8_t crc_8(uint8_t* data, uint8_t length){
     return crc;
 }
 /* ****** */
+
+/* 数组处理 */
+void get_max_min_value_in_array(uint8_t* array,uint8_t element_length,uint8_t array_length,uint8_t* index_max,uint8_t* index_min){
+    switch (element_length)
+    {
+        case 1:{
+            uint8_t max_temp_value = 0;
+            uint8_t min_temp_value = 0xFF;
+            for(uint8_t i = 0;i < array_length;i++){
+                if(array[i] > max_temp_value){
+                    max_temp_value = array[i];
+                    *index_max = i;
+                }
+                if(array[i] < min_temp_value){
+                    min_temp_value = array[i];
+                    *index_min = i;
+                }
+            }
+        }
+            break;
+        case 2:{
+            uint16_t max_temp_value = 0;
+            uint16_t min_temp_value = 0xFFFF;
+            for(uint8_t i = 0;i < array_length;i++){
+                if(((uint16_t*)array)[i] > max_temp_value){
+                    max_temp_value = ((uint16_t*)array)[i];
+                    *index_max = i;
+                }
+                if(((uint16_t*)array)[i] < min_temp_value){
+                    min_temp_value = ((uint16_t*)array)[i];
+                    *index_min = i;
+                }
+            }
+        }
+            break;
+        case 3:
+            break;
+        case 8:{
+            uint64_t max_temp_value = 0;
+            uint64_t min_temp_value = 0xFFFFFFFFFFFFFFFF;
+            for(uint8_t i = 0;i < array_length;i++){
+                if(((uint64_t*)array)[i] > max_temp_value){
+                    max_temp_value = ((uint64_t*)array)[i];
+                    *index_max = i;
+                }
+                if(((uint64_t*)array)[i] < min_temp_value){
+                    min_temp_value = ((uint64_t*)array)[i];
+                    *index_min = i;
+                }
+            }
+        }
+            break;
+        default:
+            break;
+    }
+}
+/* ******* */
