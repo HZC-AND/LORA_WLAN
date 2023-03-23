@@ -24,6 +24,10 @@
 
 #include "usart.h"
 
+#if (Packet_Loss_Rate_Test == STD_ON)
+#include "function_test.h"
+#endif
+
 /* 路由表 */
 
 /* 定位表 */
@@ -491,7 +495,7 @@ uint8_t copy_data_to_receive_frame(uint8_t *data) {
     switch (data[0]) {
         case data_frame: {
             memcpy(&network_layer_receive_data_frame,data,6);
-            memcpy(&receive_data_buffer,data + 6,network_layer_receive_data_frame.data_length);
+            memcpy(&receive_data_buffer[0],data + 6,network_layer_receive_data_frame.data_length);
             /* 状态机 */
             if (network_layer_receive_data_frame.message_number == 1) {
                 network_layer_receive_state = received_single_data_frame;
@@ -501,7 +505,7 @@ uint8_t copy_data_to_receive_frame(uint8_t *data) {
             /* ***** */
             /* 丢包率测试，立即调用 */
             #if (Packet_Loss_Rate_Test == STD_ON)
-            packet_loss_rate_test_receive_function(&receive_data_buffer);
+            packet_loss_rate_test_receive_function(&receive_data_buffer[0]);
             #endif
             /* ****************** */
         }
@@ -607,6 +611,10 @@ network_layer_send_state_enum get_network_layer_send_state(void) {
     return network_layer_send_state;
 }
 
+void set_network_layer_send_state(network_layer_send_state_enum state) {
+    network_layer_send_state = state;
+}
+
 network_layer_receive_state_enum get_network_layer_receive_state(void) {
     return network_layer_receive_state;
 }
@@ -635,7 +643,7 @@ uint8_t get_RSSI_result(void){
     return RSSI_result;
 }
 
-static uint8_t network_layer_data_frame_send_single_frame(void) {
+uint8_t network_layer_data_frame_send_single_frame(void) {
     uint8_t result = 0;
 
     network_layer_data_frame_t network_layer_data_frame;

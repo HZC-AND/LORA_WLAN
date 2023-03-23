@@ -5,12 +5,19 @@
 #ifndef NJFUWORK_FINAL_FUNCTION_TEST_H
 #define NJFUWORK_FINAL_FUNCTION_TEST_H
 
-#include "device_info.h"
+
+#include "mainConfig.h"
+
+#ifndef NJFUWORK_FINAL_MAINCONFIG_H
+#include "fake/platform.h"
+#else
+#include <stdint.h>
+#endif
 
 void SX1278_test_init();
 void SX1278_test_main_function();
 
-void packet_loss_rate_test_send_function();
-void packet_loss_rate_test_receive_function();
+void packet_loss_rate_test_send_function(uint8_t mode);
+void packet_loss_rate_test_receive_function(uint8_t *data);
 
 #endif //NJFUWORK_FINAL_FUNCTION_TEST_H
