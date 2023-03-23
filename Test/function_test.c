@@ -5,6 +5,9 @@
 #include "function_test.h"
 #include "SX1278.h"
 
+#include "data_link_layer.h"
+#include "network_layer.h"
+
 extern SX1278_t SX1278;
 uint8_t SX1278_test_tx_buffer[10] = {0};
 /**
@@ -27,3 +30,36 @@ void SX1278_test_rx(){
 void SX1278_test_main_function(){
 
 }
+/* 性能测试 */
+#if (Packet_Loss_Rate_Test == STD_ON)
+uint8_t packet_loss_rate_test_send_data[10];
+uint8_t receive_counter = 0;
+uint8_t receive_counter_number_in_packet = 0;
+#endif
+void packet_loss_rate_test_send_function(uint8_t mode){
+    #if (Packet_Loss_Rate_Test == STD_ON)
+    switch (mode)
+    {
+        case 1:
+            /* 点对点单节点测试 */
+            packet_loss_rate_test_send_data[0] +=1;
+            if (get_network_layer_send_state() == sending_idle) {
+                network_layer_data_frame_send(&packet_loss_rate_test_send_data[0], 10, To_MAC_Address);//TODO:应该使用立即发送接口
+                network_layer_data_frame_send_single_frame();
+                network_layer_send_state = sending_idle;
+            }
+            break;
+        
+        default:
+            break;
+    }
+    #endif
+}
+
+void packet_loss_rate_test_receive_function(uint8_t* data){
+    #if (Packet_Loss_Rate_Test == STD_ON)
+    receive_counter++;
+    receive_counter_number_in_packet = data[0];
+    #endif
+}
+/* ****** */

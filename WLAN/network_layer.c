@@ -490,16 +490,7 @@ uint8_t copy_data_to_receive_frame(uint8_t *data) {
 
     switch (data[0]) {
         case data_frame: {
-            // network_layer_receive_data_frame.frame_type = data[0];
-            // network_layer_receive_data_frame.message_number = data[1];
-            // network_layer_receive_data_frame.message_counter = data[2];
-            // network_layer_receive_data_frame.from_mac_address = data[3];
-            // network_layer_receive_data_frame.to_mac_address = data[4];
-            // network_layer_receive_data_frame.data_length = data[5];
             memcpy(&network_layer_receive_data_frame,data,6);
-            // for (uint8_t i = 0; i < network_layer_receive_data_frame.data_length; i++) {
-            //     receive_data_buffer[i] = data[6 + i];
-            // }
             memcpy(&receive_data_buffer,data + 6,network_layer_receive_data_frame.data_length);
             /* 状态机 */
             if (network_layer_receive_data_frame.message_number == 1) {
@@ -508,6 +499,11 @@ uint8_t copy_data_to_receive_frame(uint8_t *data) {
                 network_layer_receive_state = received_multiple_data_frame;
             }
             /* ***** */
+            /* 丢包率测试，立即调用 */
+            #if (Packet_Loss_Rate_Test == STD_ON)
+            packet_loss_rate_test_receive_function(&receive_data_buffer);
+            #endif
+            /* ****************** */
         }
             break;
         case data_ack_frame: {
