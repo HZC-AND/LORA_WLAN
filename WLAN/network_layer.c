@@ -495,7 +495,7 @@ uint8_t copy_data_to_receive_frame(uint8_t *data) {
     switch (data[0]) {
         case data_frame: {
             memcpy(&network_layer_receive_data_frame,data,6);
-            memcpy(&receive_data_buffer[0],data + 6,network_layer_receive_data_frame.data_length);
+            memcpy(&receive_data_buffer[0],data + 6,network_layer_receive_data_frame.data_length);//TODO：需验证
             /* 状态机 */
             if (network_layer_receive_data_frame.message_number == 1) {
                 network_layer_receive_state = received_single_data_frame;
