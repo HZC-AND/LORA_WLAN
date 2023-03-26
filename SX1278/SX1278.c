@@ -697,7 +697,7 @@ uint8_t SX1278_H_TX_Once(SX1278_t *module, uint8_t *txBuffer, uint8_t length, ui
 }
 
 uint8_t SX1278_H_RX_Once(SX1278_t *module, uint8_t length, uint32_t timeout){
-    if(module->Running_Status == SX1278_RUNNING_IDLE) {
+    if((module->Running_Status == SX1278_RUNNING_IDLE )|| (module->Running_Status == STANDBY)) {
         SX1278_H_Enter_RX(module, length);
 
         module->Running_Status = SX1278_RUNNING_RX_PENDING;

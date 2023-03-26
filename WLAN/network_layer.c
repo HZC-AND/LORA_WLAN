@@ -505,7 +505,9 @@ uint8_t copy_data_to_receive_frame(uint8_t *data) {
             /* ***** */
             /* 丢包率测试，立即调用 */
             #if (Packet_Loss_Rate_Test == STD_ON)
-            packet_loss_rate_test_receive_function(&receive_data_buffer[0]);
+            if(receive_data_buffer[0] == 0xFF) {
+                packet_loss_rate_test_receive_function(&receive_data_buffer[0]);
+            }
             #endif
             /* ****************** */
         }

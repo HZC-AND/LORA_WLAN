@@ -19,7 +19,7 @@
 
 #define Packet_Loss_Rate_Test STD_OFF //Packet_Loss_Rate_Test 开关
 
-#define Current_MAC_Address 1   //1-255
+#define Current_MAC_Address 1  //1-255
 #define To_MAC_Address 2 //1-255
 // #define Communication_Mode point_to_point
 #define Channel_Selection_Init _413MHZ
