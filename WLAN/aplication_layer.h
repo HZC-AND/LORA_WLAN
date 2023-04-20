@@ -28,6 +28,7 @@ uint8_t AFLP_process(void);
 void AFLP_main_function(void);
 
 void NNR_update_distace(uint8_t mac_address,uint64_t distance);
+void NNR_set_is_target_mac_address(uint8_t mac_address);
 void NNR_main_function(void);
 uint8_t NNR_get_min_distance_target_mac_address(void);
 uint64_t NNR_get_min_distance_target_distance(void);

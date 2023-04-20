@@ -192,6 +192,11 @@ void NNR_update_distace(uint8_t mac_address,uint64_t distance){
     }
 }
 
+//由数据接收函数调用，用于设置own_mac_address_is_target_mac_address
+void NNR_set_is_target_mac_address(uint8_t mac_address){
+    own_mac_address_is_target_mac_address = mac_address;
+}
+
 //该函数周期调用
 void NNR_main_function(){
     if(AFLP_state == AFLP_end){
