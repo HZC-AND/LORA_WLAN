@@ -36,6 +36,14 @@ uint8_t RSSI_result_temp[10];
 
 uint8_t AFLP_pending_timer_time = 50;//初始化单位个，1个AFLP main函数周期
 
+
+/* 最近邻路由表建立机制相关变量 */
+uint8_t min_distance_target_mac_address = 0;/* 存放最近邻节点MAC地址，即ID */
+uint64_t min_distance_target_distance = 0xFFFFFFFFFFFFFFFF;/* 存放与最近邻节点的距离值 */
+
+uint8_t own_mac_address_is_target_mac_address = 0 /* 设置本届点为目标路由节点的节点MAC地址 */
+/* ************************* */
+
 void application_layer_init(void){
     AFLP_to_mac_address = 1;
     TOF_result_array[0] = Current_MAC_Address;
@@ -153,6 +161,7 @@ void AFLP_main_function(void){
                 if (get_network_layer_send_state() == sending_idle) {
                     taskENTER_CRITICAL();
                     /* TODO:向sink node发送定位结果数据 */
+                    /* Comment this line of code for adaptation to the next version of hardware. */
                     // network_layer_data_frame_send(&Tx_Data[0], 10, 1);
                     taskEXIT_CRITICAL();
                 }
@@ -164,5 +173,46 @@ void AFLP_main_function(void){
             break;
     }
 }
+
+/* 最近邻路由表建立机制 Nearest neighbor routing(NNR)
+目的：保证存在一条通信路径的同时极大的减少对flash和ram的空间占用
+ */
+
+//该函数应在AFLP定位距离计算函数中调用
+void NNR_update_distace(uint8_t mac_address,uint64_t distance){
+    if(mac_address != own_mac_address_is_target_mac_address){
+        if(distance < min_distance_target_distance ){
+            min_distance_target_mac_address = mac_address;
+            min_distance_target_distance = distance;
+        }else{
+            /* Do Nothing */
+        }
+    }else{
+        /* Do Nothing */
+    }
+}
+
+//该函数周期调用
+void NNR_main_function(){
+    if(AFLP_state == AFLP_end){
+        /* TODO:主动向目标节点发送其被标记为本节点的路由节点的报文，用于更新own_mac_address_is_target_mac_address，
+        目的是避免路由闭锁的发生。
+         */
+
+        /* Comment this line of code for adaptation to the next version of hardware. */
+        // network_layer_data_frame_send(&Tx_Data[0], 10, min_distance_target_mac_address);
+    }else{
+        /* Do Nothing */
+    }
+}
+
+uint8_t NNR_get_min_distance_target_mac_address(){
+    return min_distance_target_mac_address;
+}
+
+uint64_t NNR_get_min_distance_target_distance(){
+    return min_distance_target_distance;
+}
+/* ****************** */
 
 
