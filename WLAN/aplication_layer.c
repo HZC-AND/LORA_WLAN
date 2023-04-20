@@ -43,13 +43,21 @@ uint64_t min_distance_target_distance = 0xFFFFFFFFFFFFFFFF;/* 存放与最近邻
 
 uint8_t own_mac_address_is_target_mac_address = 0 /* 设置本届点为目标路由节点的节点MAC地址 */
 /* ************************* */
-
+/**
+ * @brief application_layer_init
+ * 
+ */
 void application_layer_init(void){
     AFLP_to_mac_address = 1;
     TOF_result_array[0] = Current_MAC_Address;
     RSSI_result_array[0] = Current_MAC_Address;
 }
 
+/**
+ * @brief AFLP_pending_timer
+ * 
+ * @return uint8_t 
+ */
 uint8_t AFLP_pending_timer(void){
     uint8_t AFLP_pending_timer_notify = 0;
     /*需要放到20ms中调用*/
@@ -67,6 +75,11 @@ uint8_t AFLP_pending_timer(void){
     return AFLP_pending_timer_notify;
 }
 
+/**
+ * @brief AFLP_process
+ * 
+ * @return uint8_t 
+ */
 uint8_t AFLP_process(void){
     if(AFLP_to_mac_address == Current_MAC_Address){
         AFLP_to_mac_address++;
@@ -104,7 +117,10 @@ uint8_t AFLP_process(void){
     return 1;
 }
 
-/*Automatic fusion location protocol*/
+/**
+ * @brief Automatic fusion location protocol
+ * 
+ */
 void AFLP_main_function(void){
     switch (AFLP_state) {
         case AFLP_start:
@@ -179,6 +195,12 @@ void AFLP_main_function(void){
  */
 
 //该函数应在AFLP定位距离计算函数中调用
+/**
+ * @brief 更新最近邻信息
+ * 
+ * @param mac_address 
+ * @param distance 
+ */
 void NNR_update_distace(uint8_t mac_address,uint64_t distance){
     if(mac_address != own_mac_address_is_target_mac_address){
         if(distance < min_distance_target_distance ){
@@ -193,11 +215,20 @@ void NNR_update_distace(uint8_t mac_address,uint64_t distance){
 }
 
 //由数据接收函数调用，用于设置own_mac_address_is_target_mac_address
+/**
+ * @brief 保存将本节点作为目标路由节点的节点ID，用途是避免路由闭锁
+ * 
+ * @param mac_address 
+ */
 void NNR_set_is_target_mac_address(uint8_t mac_address){
     own_mac_address_is_target_mac_address = mac_address;
 }
 
 //该函数周期调用
+/**
+ * @brief 主函数
+ * 
+ */
 void NNR_main_function(){
     if(AFLP_state == AFLP_end){
         /* TODO:主动向目标节点发送其被标记为本节点的路由节点的报文，用于更新own_mac_address_is_target_mac_address，
@@ -211,10 +242,20 @@ void NNR_main_function(){
     }
 }
 
+/**
+ * @brief 获取min_distance_target_mac_address
+ * 
+ * @return uint8_t 
+ */
 uint8_t NNR_get_min_distance_target_mac_address(){
     return min_distance_target_mac_address;
 }
 
+/**
+ * @brief 获取NNR_get_min_distance_target_distance
+ * 
+ * @return uint64_t 
+ */
 uint64_t NNR_get_min_distance_target_distance(){
     return min_distance_target_distance;
 }
